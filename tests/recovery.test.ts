@@ -5,14 +5,14 @@ import os from "node:os";
 import { recoverExports, trackExport } from "../src/main/recovery";
 let root: string;
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "folio-recovery-test-"));
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-recovery-test-"));
 });
 afterEach(async () => {
-  if (root && path.basename(root).startsWith("folio-recovery-test-"))
+  if (root && path.basename(root).startsWith("paperin-recovery-test-"))
     await fs.rm(root, { recursive: true, force: true });
 });
 it("cleans only owned export staging after a simulated crash", async () => {
-  const staging = await fs.mkdtemp(path.join(root, ".folio-export-"));
+  const staging = await fs.mkdtemp(path.join(root, ".paperin-export-"));
   const journal = path.join(root, "journal.json");
   await trackExport(journal, staging);
   await fs.writeFile(path.join(staging, "0.pdf"), "incomplete output");
@@ -21,7 +21,7 @@ it("cleans only owned export staging after a simulated crash", async () => {
   await expect(fs.access(journal)).rejects.toThrow();
 });
 it("does not delete an unknown folder, even if a journal points to it", async () => {
-  const unknown = await fs.mkdtemp(path.join(root, ".folio-export-"));
+  const unknown = await fs.mkdtemp(path.join(root, ".paperin-export-"));
   await fs.writeFile(path.join(unknown, "keep.pdf"), "original");
   const journal = path.join(root, "journal.json");
   await fs.writeFile(journal, JSON.stringify([unknown, root]));

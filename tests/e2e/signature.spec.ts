@@ -46,7 +46,7 @@ async function rect() {
   }));
 }
 test.beforeAll(async () => {
-  temp = await fs.mkdtemp(path.join(os.tmpdir(), "folio-signature-e2e-"));
+  temp = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-signature-e2e-"));
   const pdf = await PDFDocument.create();
   for (const rotation of [0, 90, 180, 270]) {
     const p = pdf.addPage([500, 420]);
@@ -84,7 +84,7 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => {
   if (app) await app.evaluate(({ app }) => app.exit());
-  if (temp && path.basename(temp).startsWith("folio-signature-e2e-"))
+  if (temp && path.basename(temp).startsWith("paperin-signature-e2e-"))
     await fs.rm(temp, { recursive: true, force: true });
 });
 test("offline editor places, drags, resizes, adjusts, undoes, and exports signatures across rotated pages", async () => {
@@ -347,18 +347,18 @@ test("main process rejects protected/signed PDFs and keeps existing output on fa
   ]) {
     await pick(location);
     const r = await page.evaluate(async () => {
-      const picked = await window.folio.pickFiles(false);
+      const picked = await window.paperin.pickFiles(false);
       if (!picked.ok) throw new Error(picked.error);
-      return window.folio.beginSignature(picked.value[0].id);
+      return window.paperin.beginSignature(picked.value[0].id);
     });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toContain(message);
   }
   await pick(pdfPath);
   const sessionId = await page.evaluate(async () => {
-    const picked = await window.folio.pickFiles(false);
+    const picked = await window.paperin.pickFiles(false);
     if (!picked.ok) throw new Error(picked.error);
-    const r = await window.folio.beginSignature(picked.value[0].id);
+    const r = await window.paperin.beginSignature(picked.value[0].id);
     if (!r.ok) throw new Error(r.error);
     return r.value;
   });
@@ -370,7 +370,7 @@ test("main process rejects protected/signed PDFs and keeps existing output on fa
   await save(existing);
   const r = await page.evaluate(
     ({ sessionId, id, imageId }) =>
-      window.folio.exportSignature({
+      window.paperin.exportSignature({
         sessionId,
         placements: [
           {
@@ -394,9 +394,10 @@ test("main process rejects protected/signed PDFs and keeps existing output on fa
       .update(await fs.readFile(existing))
       .digest("hex"),
   ).toBe(hash);
-  await page.evaluate((id) => window.folio.endSignature(id), sessionId);
+  await page.evaluate((id) => window.paperin.endSignature(id), sessionId);
   expect(
-    (await page.evaluate((id) => window.folio.pickSignature(id), sessionId)).ok,
+    (await page.evaluate((id) => window.paperin.pickSignature(id), sessionId))
+      .ok,
   ).toBe(false);
   expect(errors).toEqual([]);
   expect(network).toEqual([]);

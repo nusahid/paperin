@@ -11,7 +11,7 @@ export type LocalFile = {
 };
 export type SavedFile = { id: string; name: string };
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
-export interface FolioAPI {
+export interface PaperinAPI {
   pickFiles(multiple: boolean): Promise<Result<LocalFile[]>>;
   importFiles(files: File[]): Promise<Result<LocalFile[]>>;
   sample(): Promise<Result<LocalFile[]>>;
@@ -28,6 +28,6 @@ export interface FolioAPI {
 }
 declare global {
   interface Window {
-    folio: FolioAPI;
+    paperin: PaperinAPI;
   }
 }

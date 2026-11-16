@@ -43,7 +43,7 @@ async function leaveTo(name: string) {
   if (await leave.isVisible()) await leave.click();
 }
 test.beforeAll(async () => {
-  temp = await fs.mkdtemp(path.join(os.tmpdir(), "folio-e2e-"));
+  temp = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-e2e-"));
   const create = async (name: string, n: number) => {
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -80,10 +80,13 @@ test.afterAll(async () => {
     });
     await app.evaluate(({ app }) => app.exit());
   }
-  if (temp && path.basename(temp).startsWith("folio-e2e-"))
+  if (temp && path.basename(temp).startsWith("paperin-e2e-"))
     await fs.rm(temp, { recursive: true, force: true });
 });
 test("Home renders the reference layout and local settings", async () => {
+  await expect(page).toHaveTitle("Paperin — Your PDF workspace");
+  await expect(page.locator(".brand strong")).toHaveText("Paperin");
+  await expect(page.locator(".sidebar-version")).toHaveText("PAPERIN / v0.1.0");
   await expect(
     page.getByRole("heading", { name: "Your PDF workspace." }),
   ).toBeVisible();
@@ -92,6 +95,7 @@ test("Home renders the reference layout and local settings", async () => {
   ).toBeVisible();
   await page.screenshot({ path: "test-results/screenshots/home.png" });
   await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.locator(".settings-intro strong")).toHaveText("Paperin");
   await expect(
     page.getByText("All documents are processed on this device."),
   ).toBeVisible();
@@ -304,7 +308,7 @@ test("Export cancellation, source protection, sandboxing, and 200-page lazy rend
   });
   await chooseFiles([fixture]);
   const id = await page.evaluate(async () => {
-    const result = await window.folio.pickFiles(false);
+    const result = await window.paperin.pickFiles(false);
     if (!result.ok) throw new Error(result.error);
     return result.value[0].id;
   });
@@ -316,7 +320,7 @@ test("Export cancellation, source protection, sandboxing, and 200-page lazy rend
     .update(await fs.readFile(fixture))
     .digest("hex");
   const guarded = await page.evaluate(
-    (plan) => window.folio.export(plan),
+    (plan) => window.paperin.export(plan),
     plan,
   );
   expect(guarded.ok).toBe(false);
@@ -333,7 +337,7 @@ test("Export cancellation, source protection, sandboxing, and 200-page lazy rend
     })) as any;
   });
   const canceled = await page.evaluate(
-    (plan) => window.folio.export(plan),
+    (plan) => window.paperin.export(plan),
     plan,
   );
   expect(canceled).toEqual({ ok: true, value: null });

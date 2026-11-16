@@ -53,7 +53,7 @@ export function App() {
   const dragDepth = useRef(0);
   const importing = useRef(false);
   useEffect(
-    () => window.folio.onProgress((message) => set({ busy: message })),
+    () => window.paperin.onProgress((message) => set({ busy: message })),
     [],
   );
   useEffect(() => {
@@ -149,7 +149,7 @@ export function App() {
       return;
     }
     await importAction(
-      () => window.folio.pickFiles(target === "merge" || target === "home"),
+      () => window.paperin.pickFiles(target === "merge" || target === "home"),
       target,
     );
   }
@@ -177,7 +177,7 @@ export function App() {
     setPreview(null);
     set({ busy: "Preparing your PDFs…", error: null, saved: [] });
     try {
-      const result = await window.folio.export(plan);
+      const result = await window.paperin.export(plan);
       if (!result.ok) throw new Error(result.error);
       if (result.value)
         set({
@@ -232,7 +232,7 @@ export function App() {
           });
           return;
         }
-        void importAction(() => window.folio.importFiles(files), workspace);
+        void importAction(() => window.paperin.importFiles(files), workspace);
       }}
     >
       <header className="titlebar">
@@ -241,26 +241,26 @@ export function App() {
             <FileText size={21} strokeWidth={1.8} />
             <span />
           </span>
-          <strong>Folio</strong>
+          <strong>Paperin</strong>
         </div>
         <span className="titlebar-caption">A little space for your PDFs</span>
         <div className="window-controls">
           <button
             aria-label="Minimize window"
-            onClick={() => window.folio.window("minimize")}
+            onClick={() => window.paperin.window("minimize")}
           >
             <Minus size={15} />
           </button>
           <button
             aria-label="Maximize window"
-            onClick={() => window.folio.window("maximize")}
+            onClick={() => window.paperin.window("maximize")}
           >
             <Maximize2 size={13} />
           </button>
           <button
             className="close-window"
             aria-label="Close window"
-            onClick={() => window.folio.window("close")}
+            onClick={() => window.paperin.window("close")}
           >
             <X size={16} />
           </button>
@@ -306,7 +306,7 @@ export function App() {
               <Settings size={18} strokeWidth={1.7} />
               <span>Settings</span>
             </button>
-            <span className="sidebar-version">FOLIO / v0.1.0</span>
+            <span className="sidebar-version">PAPERIN / v0.1.0</span>
           </div>
         </aside>
         <main className={`main-content main-${workspace}`}>
@@ -315,7 +315,7 @@ export function App() {
               onOpen={() => void open("home")}
               onNavigate={navigate}
               onSample={() =>
-                void importAction(() => window.folio.sample(), "reader")
+                void importAction(() => window.paperin.sample(), "reader")
               }
             />
           )}
@@ -393,7 +393,7 @@ export function App() {
               <button
                 onClick={() =>
                   void importAction(
-                    () => window.folio.openSaved(saved[0].id),
+                    () => window.paperin.openSaved(saved[0].id),
                     "reader",
                   )
                 }
@@ -403,7 +403,7 @@ export function App() {
               </button>
               <button
                 onClick={async () => {
-                  const result = await window.folio.showSaved(saved[0].id);
+                  const result = await window.paperin.showSaved(saved[0].id);
                   if (!result.ok) set({ error: result.error });
                 }}
               >
@@ -477,7 +477,10 @@ export function App() {
               onClick={() => {
                 const target = importTarget;
                 setImportTarget(null);
-                void importAction(() => window.folio.pickFiles(false), target);
+                void importAction(
+                  () => window.paperin.pickFiles(false),
+                  target,
+                );
               }}
             >
               Choose another PDF
@@ -544,7 +547,7 @@ export function App() {
               <FileText size={21} />
             </span>
             <div>
-              <strong>Folio</strong>
+              <strong>Paperin</strong>
               <span>Version 0.1.0 · Windows desktop</span>
             </div>
             <span className="offline-badge">

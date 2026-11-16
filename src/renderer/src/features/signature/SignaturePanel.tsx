@@ -28,7 +28,7 @@ export async function saveSignatures() {
   }
   app.set({ busy: "Preparing your signed PDF…", saved: [], error: null });
   try {
-    const result = await window.folio.exportSignature({
+    const result = await window.paperin.exportSignature({
       sessionId: s.sessionId,
       placements: s.current.placements,
     });
@@ -107,7 +107,7 @@ export function SignaturePanel({
     if (app.busy || !s.sessionId) return;
     app.set({ busy: "Opening your signature image…", error: null });
     try {
-      const result = await window.folio.pickSignature(s.sessionId);
+      const result = await window.paperin.pickSignature(s.sessionId);
       if (!result.ok) throw new Error(result.error);
       if (result.value) {
         const next = result.value;

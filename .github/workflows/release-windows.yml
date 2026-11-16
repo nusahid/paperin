@@ -1,0 +1,93 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Check release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $packageVersion = (Get-Content -Raw package.json | ConvertFrom-Json).version
+          if ($env:RELEASE_TAG -cne "v$packageVersion") {
+            throw "Tag must match package.json version: v$packageVersion"
+          }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up verified qpdf
+        run: npm run setup:qpdf
+
+      - name: Unit and integration tests
+        run: npm test
+
+      - name: Electron end-to-end tests
+        run: npm run test:e2e
+
+      - name: Build Windows installer
+        run: npm run make
+
+      - name: Test packaged app
+        run: npm run test:package
+
+      - name: Generate installer checksum
+        run: |
+          $installerPath = '.\dist\make\squirrel.windows\x64\Paperin-Setup.exe'
+          $installerHash = (Get-FileHash -LiteralPath $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -LiteralPath '.\dist\make\squirrel.windows\x64\SHA256SUMS.txt' -Value "$installerHash  Paperin-Setup.exe" -Encoding ascii
+
+      - name: Save installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Paperin-Windows-x64
+          if-no-files-found: error
+          path: |
+            dist/make/squirrel.windows/x64/Paperin-Setup.exe
+            dist/make/squirrel.windows/x64/SHA256SUMS.txt
+
+      - name: Create draft release with installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $releaseNotes = @"
+          Paperin is an offline PDF workspace for Windows x64.
+
+          ## Download and installation
+          Download Paperin-Setup.exe, run the installer, then open Paperin from the Start Menu.
+          Node.js and qpdf do not need to be installed separately. The installer is unsigned.
+
+          [Installation guide](https://github.com/$env:GH_REPO/blob/$env:RELEASE_TAG/docs/INSTALLATION.md)
+
+          SHA256SUMS.txt contains the installer checksum for this release.
+          "@
+          $notesPath = Join-Path $env:RUNNER_TEMP 'paperin-release-notes.md'
+          Set-Content -LiteralPath $notesPath -Value $releaseNotes -Encoding utf8
+          gh release create "$env:RELEASE_TAG" '.\dist\make\squirrel.windows\x64\Paperin-Setup.exe' '.\dist\make\squirrel.windows\x64\SHA256SUMS.txt' --verify-tag --draft --title "Paperin $env:RELEASE_TAG" --notes-file "$notesPath"
+          if ($LASTEXITCODE -ne 0) { throw 'Creating the draft release failed. Check whether the tag already has a release.' }

@@ -36,7 +36,7 @@ app.commandLine.appendSwitch("disable-background-networking");
 app.commandLine.appendSwitch("disable-component-update");
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: "folio",
+    scheme: "paperin",
     privileges: { standard: true, secure: true, supportFetchAPI: true },
   },
 ]);
@@ -109,7 +109,7 @@ function isTrusted(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent) {
   const url = new URL(event.senderFrame.url);
   if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL)
     return url.origin === new URL(process.env.ELECTRON_RENDERER_URL).origin;
-  return url.protocol === "folio:" && url.host === "app";
+  return url.protocol === "paperin:" && url.host === "app";
 }
 function handle(channel: string, callback: (payload: any) => Promise<unknown>) {
   ipcMain.handle(channel, async (event, payload): Promise<Result<unknown>> => {
@@ -273,7 +273,7 @@ function setupIPC() {
         images: [...session.images.values()],
       });
       staging = await fs.mkdtemp(
-        path.join(path.dirname(destination), ".folio-export-"),
+        path.join(path.dirname(destination), ".paperin-export-"),
       );
       await trackExport(journal(), staging);
       const temporary = path.join(staging, "signed.pdf");
@@ -392,7 +392,7 @@ function setupIPC() {
       for (const destination of destinations)
         await assertNotSource(destination, files);
       staging = await fs.mkdtemp(
-        path.join(path.dirname(destinations[0]), ".folio-export-"),
+        path.join(path.dirname(destinations[0]), ".paperin-export-"),
       );
       await trackExport(journal(), staging);
       for (let i = 0; i < plan.outputs.length; i++) {
@@ -465,9 +465,9 @@ async function createWindow() {
     minHeight: 650,
     frame: false,
     backgroundColor: "#f8f9fc",
-    title: "Folio",
+    title: "Paperin",
     show: false,
-    icon: path.join(resourceRoot(), "icons/folio.png"),
+    icon: path.join(resourceRoot(), "icons/paperin.png"),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       nodeIntegration: false,
@@ -482,11 +482,11 @@ async function createWindow() {
   mainWindow.webContents.on("will-prevent-unload", (event) => {
     const answer = dialog.showMessageBoxSync(mainWindow, {
       type: "question",
-      title: "Close Folio?",
+      title: "Close Paperin?",
       message: "You have changes that have not been exported.",
       detail:
         "Your original documents are safe. Close without saving the current setup?",
-      buttons: ["Keep working", "Close Folio"],
+      buttons: ["Keep working", "Close Paperin"],
       defaultId: 0,
       cancelId: 0,
     });
@@ -501,11 +501,11 @@ async function createWindow() {
   mainWindow.once("ready-to-show", () => mainWindow.show());
   if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL)
     await mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
-  else await mainWindow.loadURL("folio://app/index.html");
+  else await mainWindow.loadURL("paperin://app/index.html");
 }
 app.whenReady().then(async () => {
   if (squirrelStartup) return;
-  protocol.handle("folio", (request) => {
+  protocol.handle("paperin", (request) => {
     const url = new URL(request.url);
     const file = path.resolve(
       rendererRoot,
@@ -528,7 +528,7 @@ app.whenReady().then(async () => {
     callback({
       cancel:
         !dev &&
-        !["folio:", "file:", "blob:", "data:", "devtools:"].includes(
+        !["paperin:", "file:", "blob:", "data:", "devtools:"].includes(
           url.protocol,
         ),
     });

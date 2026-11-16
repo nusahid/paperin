@@ -55,7 +55,7 @@ export function Reader({
       .getState()
       .set({ busy: "Checking this PDF for signing…", error: null, saved: [] });
     try {
-      const result = await window.folio.beginSignature(doc.id);
+      const result = await window.paperin.beginSignature(doc.id);
       if (!result.ok) throw new Error(result.error);
       signature.begin(doc.id, result.value);
       setSearchOpen(false);

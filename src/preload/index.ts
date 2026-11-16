@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
-import type { FolioAPI } from "../shared/types";
-const api: FolioAPI = {
+import type { PaperinAPI } from "../shared/types";
+const api: PaperinAPI = {
   pickFiles: (multiple) => ipcRenderer.invoke("files:pick", multiple),
   importFiles: (files) =>
     ipcRenderer.invoke(
@@ -24,4 +24,4 @@ const api: FolioAPI = {
     return () => ipcRenderer.removeListener("pdf:progress", listener);
   },
 };
-contextBridge.exposeInMainWorld("folio", api);
+contextBridge.exposeInMainWorld("paperin", api);

@@ -1,4 +1,4 @@
-/* PDF.js text-layer layout, scoped to Folio's reading canvas.
+/* PDF.js text-layer layout, scoped to Paperin's reading canvas.
  * Based on Mozilla PDF.js, Apache-2.0. No viewer UI styles are imported. */
 .textLayer {
   color-scheme: only light;

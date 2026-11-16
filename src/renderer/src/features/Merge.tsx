@@ -104,7 +104,7 @@ export function Merge({
                   onDragStart={(event) => {
                     setDragged(doc.id);
                     event.dataTransfer.effectAllowed = "move";
-                    event.dataTransfer.setData("text/folio-id", doc.id);
+                    event.dataTransfer.setData("text/paperin-id", doc.id);
                   }}
                   onDragEnd={() => {
                     setDragged(null);

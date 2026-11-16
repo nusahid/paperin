@@ -35,7 +35,7 @@ async function fixture(count: number, label: string) {
   return location;
 }
 beforeAll(async () => {
-  temp = await fs.mkdtemp(path.join(os.tmpdir(), "folio-test-"));
+  temp = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-test-"));
   for (const [i, count] of [5, 7, 23].entries()) {
     const location = await fixture(count, `source-${i}`);
     files.set(ids[i], { path: location });
@@ -53,7 +53,7 @@ afterAll(async () => {
         .update(await fs.readFile(file.path))
         .digest("hex"),
     ).toBe(hashes[i]);
-  if (temp && path.basename(temp).startsWith("folio-test-"))
+  if (temp && path.basename(temp).startsWith("paperin-test-"))
     await fs.rm(temp, { recursive: true, force: true });
 });
 describe("real qpdf engine", () => {
@@ -141,7 +141,7 @@ describe("real qpdf engine", () => {
     await runQpdf(binary, [
       files.get(ids[0])!.path,
       "--encrypt",
-      "folio-test",
+      "paperin-test",
       "owner-test",
       "256",
       "--",
@@ -153,7 +153,7 @@ describe("real qpdf engine", () => {
       outputs: [{ name: "unlocked.pdf", sources: [{ id, pages: [2, 4] }] }],
     };
     await expect(validatePlan(binary, plan, files)).rejects.toThrow("password");
-    files.get(id)!.password = "folio-test";
+    files.get(id)!.password = "paperin-test";
     await validatePlan(binary, plan, files);
     await generateOutput(
       binary,

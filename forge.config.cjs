@@ -2,8 +2,8 @@ module.exports = {
   outDir: "dist",
   packagerConfig: {
     asar: true,
-    executableName: "Folio",
-    icon: "resources/icons/folio.ico",
+    executableName: "Paperin",
+    icon: "resources/icons/paperin.ico",
     extraResource: [
       "resources/binaries/qpdf",
       "resources/samples",
@@ -20,17 +20,18 @@ module.exports = {
       /^\/playwright-report($|\/)/,
     ],
     win32metadata: {
-      CompanyName: "Folio",
-      FileDescription: "Folio — Offline PDF workspace",
+      CompanyName: "Paperin",
+      FileDescription: "Paperin — Offline PDF workspace",
     },
   },
   makers: [
     {
       name: "@electron-forge/maker-squirrel",
       config: {
-        name: "Folio",
-        setupIcon: "resources/icons/folio.ico",
-        authors: "Folio",
+        name: "Paperin",
+        setupExe: "Paperin-Setup.exe",
+        setupIcon: "resources/icons/paperin.ico",
+        authors: "Paperin",
         description: "Your offline PDF workspace",
       },
     },

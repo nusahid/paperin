@@ -45,7 +45,7 @@ const paras = [
   ],
   [
     "Some things are better kept close. Your documents are processed on your computer, without accounts, uploads, or cloud services.",
-    "Folio works without an internet connection. Your files stay on your device, from the first page you open to the last PDF you save.",
+    "Paperin works without an internet connection. Your files stay on your device, from the first page you open to the last PDF you save.",
   ],
   [
     "This sample is yours to explore. Try searching for a word, extracting a few pages, or combining it with another PDF.",
@@ -68,7 +68,7 @@ function wrap(text, font, size, max) {
 }
 for (let i = 0; i < 8; i++) {
   const p = document.addPage([595.28, 841.89]);
-  p.drawText("FOLIO   /   A FIELD GUIDE", {
+  p.drawText("PAPERIN   /   A FIELD GUIDE", {
     x: 56,
     y: 784,
     size: 8,
@@ -150,7 +150,7 @@ for (let i = 0; i < 8; i++) {
   });
 }
 document.setTitle("A little room to think");
-document.setAuthor("Folio");
+document.setAuthor("Paperin");
 await fs.mkdir(path.resolve("resources/samples"), { recursive: true });
 await fs.writeFile(
   path.resolve("resources/samples/A little room to think.pdf"),

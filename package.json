@@ -1,10 +1,18 @@
 {
-  "name": "folio",
-  "productName": "Folio",
+  "name": "paperin",
+  "productName": "Paperin",
   "version": "0.1.0",
   "description": "Your offline PDF workspace. Open. Read. Organize. Save.",
-  "author": "Folio",
+  "author": "Paperin",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nusahid/paperin.git"
+  },
+  "homepage": "https://github.com/nusahid/paperin#readme",
+  "bugs": {
+    "url": "https://github.com/nusahid/paperin/issues"
+  },
   "main": "out/main/index.js",
   "scripts": {
     "postinstall": "node scripts/setup-assets.mjs && node scripts/create-samples.mjs",

@@ -29,7 +29,7 @@ export async function loadPdf(
   try {
     const pdf = await task.promise;
     if (password !== undefined)
-      await window.folio.setPassword(file.id, password);
+      await window.paperin.setPassword(file.id, password);
     const warnings: string[] = [];
     const [fields, attachments, signatures] = await Promise.allSettled([
       pdf.getFieldObjects(),

@@ -142,7 +142,7 @@ export const useSignature = create<State>((set, get) => {
     end: async () => {
       const s = get();
       if (s.sessionId) {
-        const result = await window.folio.endSignature(s.sessionId);
+        const result = await window.paperin.endSignature(s.sessionId);
         if (!result.ok) {
           useApp.getState().set({ error: result.error });
           return;

@@ -43,7 +43,7 @@ export async function runQpdf(binary: string, args: string[]) {
       );
     if (error.code === "ENOENT")
       throw new Error(
-        "The local PDF engine is missing. Run npm run setup:qpdf and restart Folio.",
+        "The local PDF engine is missing. Run npm run setup:qpdf and restart Paperin.",
       );
     if (error.killed)
       throw new Error("PDF processing timed out. Try a smaller document.");
@@ -129,7 +129,7 @@ export async function assertNotSource(
     const actualSource = await fs.realpath(file.path);
     if (normalize(actualDestination) === normalize(actualSource))
       throw new Error(
-        "Choose a new file name. Folio keeps your original documents unchanged.",
+        "Choose a new file name. Paperin keeps your original documents unchanged.",
       );
     try {
       const [a, b] = await Promise.all([

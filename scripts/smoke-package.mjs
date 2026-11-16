@@ -4,15 +4,19 @@ import path from "node:path";
 import os from "node:os";
 import { PDFDocument } from "pdf-lib";
 import { PNG } from "pngjs";
-const temp = await fs.mkdtemp(path.join(os.tmpdir(), "folio-package-smoke-"));
+const temp = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-package-smoke-"));
 let app;
 try {
   app = await electron.launch({
     executablePath: path.resolve(
-      process.env.FOLIO_SMOKE_EXECUTABLE || "dist/Folio-win32-x64/Folio.exe",
+      process.env.PAPERIN_SMOKE_EXECUTABLE ||
+        "dist/Paperin-win32-x64/Paperin.exe",
     ),
   });
   const page = await app.firstWindow();
+  expect(await app.evaluate(({ app }) => app.getName())).toBe("Paperin");
+  await expect(page).toHaveTitle("Paperin — Your PDF workspace");
+  await expect(page.locator(".brand strong")).toHaveText("Paperin");
   const errors = [],
     remote = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -93,9 +97,9 @@ try {
     });
   }, output);
   const result = await page.evaluate(async () => {
-    const source = await window.folio.sample();
+    const source = await window.paperin.sample();
     if (!source.ok) throw new Error(source.error);
-    return window.folio.export({
+    return window.paperin.export({
       outputs: [
         {
           name: "packaged-extract.pdf",
@@ -118,6 +122,6 @@ try {
   );
 } finally {
   if (app) await app.evaluate(({ app }) => app.exit());
-  if (path.basename(temp).startsWith("folio-package-smoke-"))
+  if (path.basename(temp).startsWith("paperin-package-smoke-"))
     await fs.rm(temp, { recursive: true, force: true });
 }
