@@ -70,7 +70,7 @@ jobs:
             dist/make/squirrel.windows/x64/Paperin-Setup.exe
             dist/make/squirrel.windows/x64/SHA256SUMS.txt
 
-      - name: Create draft release with installer
+      - name: Publish release with installer
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -89,5 +89,5 @@ jobs:
           "@
           $notesPath = Join-Path $env:RUNNER_TEMP 'paperin-release-notes.md'
           Set-Content -LiteralPath $notesPath -Value $releaseNotes -Encoding utf8
-          gh release create "$env:RELEASE_TAG" '.\dist\make\squirrel.windows\x64\Paperin-Setup.exe' '.\dist\make\squirrel.windows\x64\SHA256SUMS.txt' --verify-tag --draft --title "Paperin $env:RELEASE_TAG" --notes-file "$notesPath"
-          if ($LASTEXITCODE -ne 0) { throw 'Creating the draft release failed. Check whether the tag already has a release.' }
+          gh release create "$env:RELEASE_TAG" '.\dist\make\squirrel.windows\x64\Paperin-Setup.exe' '.\dist\make\squirrel.windows\x64\SHA256SUMS.txt' --verify-tag --latest --title "Paperin $env:RELEASE_TAG" --notes-file "$notesPath"
+          if ($LASTEXITCODE -ne 0) { throw 'Publishing the release failed. Check whether the tag already has a release.' }

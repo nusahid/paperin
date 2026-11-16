@@ -88,7 +88,7 @@ If the tag also triggers the release workflow, choose one publishing route. If a
 
 ## 3B. Build with GitHub Actions
 
-The repository includes a [Windows Release workflow](../.github/workflows/release-windows.yml). It builds the installer on a Windows runner when a `v*` tag is pushed. It creates a **draft release** with the installer and checksum so you can review the output before publishing.
+The repository includes a [Windows Release workflow](../.github/workflows/release-windows.yml). It builds the installer on a Windows runner when a `v*` tag is pushed. After all checks pass, it publishes a **public release** containing the installer and checksum and marks it as **Latest**. Pushing a version tag starts this publication process, so review the source and version before pushing the tag.
 
 For the version currently listed in `package.json`:
 
@@ -105,13 +105,13 @@ The workflow:
 2. Installs dependencies and sets up verified qpdf binaries.
 3. Runs unit/integration and E2E tests, then builds the installer.
 4. Runs the packaged app smoke test.
-5. Generates `SHA256SUMS.txt`, saves both files as an Actions artifact, and creates a draft GitHub Release.
+5. Generates `SHA256SUMS.txt`, saves both files as an Actions artifact, and publishes the latest GitHub Release.
 
-After the workflow succeeds, open **Releases**, edit the draft, review its notes and assets, then **Publish release** and mark it as **Latest**. The installer is still unsigned. Test installation on a clean Windows machine before treating the package as ready for wider distribution.
+After the workflow succeeds, open **Releases** and verify its notes, installer, checksum, and public download link. The installer is still unsigned. Test installation on a clean Windows machine before treating the package as ready for wider distribution.
 
 The workflow uses the built-in `GITHUB_TOKEN` with `contents: write` permission on the release job. You do not need to put a personal token in the source code. Organization or repository policies may restrict GitHub Actions or write access; adjust the repository settings if necessary.
 
-The workflow refuses to overwrite an existing release. If a previous run already created a draft for the tag, inspect that draft and use the correct build artifact, or remove the unpublished draft before rerunning the workflow.
+The workflow refuses to overwrite an existing release. If a release already exists for the tag, inspect its assets and use a new version tag for a new release. If a failed run left an unpublished draft, inspect that draft before deciding whether to remove it and rerun the workflow.
 
 ## 4. Verify public downloads
 

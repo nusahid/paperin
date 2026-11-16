@@ -15,7 +15,7 @@ Paperin uses Electron, React, TypeScript, electron-vite/Vite, PDF.js, qpdf, pdf-
 | `resources`         | Icons, sample PDFs, qpdf, and third-party license notices.                                                             |
 | `scripts`           | Resource setup, verified qpdf downloads, sample generation, and packaged app smoke tests.                              |
 | `tests`             | Unit/integration tests and Electron E2E tests.                                                                         |
-| `.github/workflows` | Installer builds and draft GitHub Releases triggered by version tags.                                                  |
+| `.github/workflows` | Installer builds and published GitHub Releases triggered by version tags.                                              |
 
 ## Prerequisites
 
