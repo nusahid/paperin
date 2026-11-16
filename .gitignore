@@ -1,0 +1,10 @@
+node_modules/
+out/
+dist/
+test-results/
+playwright-report/
+resources/binaries/qpdf/
+resources/samples/*.pdf
+*.log
+audit.json
+src/renderer/public/pdfjs/
