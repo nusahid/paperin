@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { version as appVersion } from "../../../package.json";
 import {
   AlertCircle,
   ArrowRight,
@@ -306,7 +307,7 @@ export function App() {
               <Settings size={18} strokeWidth={1.7} />
               <span>Settings</span>
             </button>
-            <span className="sidebar-version">PAPERIN / v0.1.0</span>
+            <span className="sidebar-version">PAPERIN / v{appVersion}</span>
           </div>
         </aside>
         <main className={`main-content main-${workspace}`}>
@@ -548,7 +549,7 @@ export function App() {
             </span>
             <div>
               <strong>Paperin</strong>
-              <span>Version 0.1.0 · Windows desktop</span>
+              <span>Version {appVersion} · Windows desktop</span>
             </div>
             <span className="offline-badge">
               <span />

@@ -63,6 +63,18 @@ npm start
 | `npm run samples`      | Regenerate sample PDFs.                                      |
 | `npm run setup:qpdf`   | Set up the pinned qpdf release.                              |
 
+## Installer animation
+
+The Squirrel installer uses the bundled Paperin animation configured through `loadingGif` in `forge.config.cjs`. It displays the existing logo, a short message, and an indeterminate loading bar. The animation does not represent a measured installation percentage.
+
+To regenerate the GIF and documentation preview after changing the logo or animation:
+
+```powershell
+npm run assets:installer
+```
+
+The script uses the bundled Inter font, the SVG logo, `@napi-rs/canvas`, and the development-only `gifenc` encoder. Commit `resources/icons/paperin-installer.gif` and `docs/images/installer.png` with the source changes. Normal builds use the committed GIF and do not need to regenerate it.
+
 ## Build and distribution output
 
 ```powershell

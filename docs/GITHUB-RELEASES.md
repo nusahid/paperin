@@ -93,8 +93,9 @@ The repository includes a [Windows Release workflow](../.github/workflows/releas
 For the version currently listed in `package.json`:
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+$versionTag = 'v' + (Get-Content -Raw package.json | ConvertFrom-Json).version
+git tag $versionTag
+git push origin $versionTag
 ```
 
 Do not reuse a tag for a different version. For later releases, update `package.json` and its lockfile, commit and push the changes, then create a matching version tag.

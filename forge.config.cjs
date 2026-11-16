@@ -31,6 +31,7 @@ module.exports = {
         name: "Paperin",
         setupExe: "Paperin-Setup.exe",
         setupIcon: "resources/icons/paperin.ico",
+        loadingGif: "resources/icons/paperin-installer.gif",
         authors: "Paperin",
         description: "Your offline PDF workspace",
       },

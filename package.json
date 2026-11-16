@@ -1,7 +1,7 @@
 {
   "name": "paperin",
   "productName": "Paperin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Your offline PDF workspace. Open. Read. Organize. Save.",
   "author": "Paperin",
   "license": "MIT",
@@ -27,6 +27,7 @@
     "test:package": "node scripts/smoke-package.mjs",
     "setup:qpdf": "node scripts/setup-qpdf.mjs",
     "samples": "node scripts/create-samples.mjs",
+    "assets:installer": "node scripts/create-installer-animation.mjs",
     "package": "npm run build && electron-forge package",
     "make": "npm run build && electron-forge make"
   },
@@ -55,6 +56,7 @@
     "@vitejs/plugin-react": "^6.3.0",
     "electron": "^45.3.2",
     "electron-vite": "^6.0.0",
+    "gifenc": "1.0.3",
     "prettier": "^3.10.1",
     "typescript": "^5.9.0",
     "vite": "^8.3.8",

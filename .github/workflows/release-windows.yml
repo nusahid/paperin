@@ -81,6 +81,7 @@ jobs:
 
           ## Download and installation
           Download Paperin-Setup.exe, run the installer, then open Paperin from the Start Menu.
+          Setup displays the Paperin logo and an animated loading indicator.
           Node.js and qpdf do not need to be installed separately. The installer is unsigned.
 
           [Installation guide](https://github.com/$env:GH_REPO/blob/$env:RELEASE_TAG/docs/INSTALLATION.md)

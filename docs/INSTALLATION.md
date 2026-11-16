@@ -31,6 +31,10 @@ If the direct link is unavailable, open the [Releases page][releases], select th
 
 Once installed, Paperin works without an internet connection.
 
+The installer displays the Paperin logo with an animated loading indicator. Installation runs automatically for your Windows user account and opens the app when ready; there is no folder selection wizard.
+
+![Paperin installer loading screen](images/installer.png)
+
 ## Windows SmartScreen warning
 
 The installer is currently **unsigned**. Windows or your browser may display an unknown publisher warning or a **Windows protected your PC** message.

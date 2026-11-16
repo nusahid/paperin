@@ -11,6 +11,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import { version as appVersion } from "../../package.json";
 let app: ElectronApplication, page: Page, temp: string;
 let fixture: string, second: string;
 const errors: string[] = [],
@@ -86,7 +87,9 @@ test.afterAll(async () => {
 test("Home renders the reference layout and local settings", async () => {
   await expect(page).toHaveTitle("Paperin — Your PDF workspace");
   await expect(page.locator(".brand strong")).toHaveText("Paperin");
-  await expect(page.locator(".sidebar-version")).toHaveText("PAPERIN / v0.1.0");
+  await expect(page.locator(".sidebar-version")).toHaveText(
+    `PAPERIN / v${appVersion}`,
+  );
   await expect(
     page.getByRole("heading", { name: "Your PDF workspace." }),
   ).toBeVisible();
