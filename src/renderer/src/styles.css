@@ -1356,6 +1356,313 @@ button:disabled:hover {
   flex: 1;
   min-height: 0;
 }
+.signature-hidden {
+  display: none;
+}
+.signature-toolbar {
+  flex-wrap: wrap;
+  padding-block: 7px;
+  gap: 6px;
+}
+.signature-toolbar .toolbar-group {
+  flex-shrink: 0;
+}
+.signature-toolbar .page-navigation {
+  margin-inline: auto;
+}
+.signature-panel {
+  width: 276px;
+  min-width: 250px;
+  flex-shrink: 0;
+  background: white;
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  color: #52647e;
+}
+.signature-panel > header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 19px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.signature-panel-icon {
+  display: grid;
+  place-items: center;
+  background: #edf3ff;
+  color: var(--accent);
+  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+}
+.signature-panel h2 {
+  margin: 0 0 5px;
+  font-size: 13px;
+  color: #273c59;
+  font-weight: 600;
+}
+.signature-panel header p {
+  margin: 0;
+  font-size: 10px;
+  color: #92a0b5;
+}
+.signature-panel-content {
+  overflow: auto;
+  padding: 0 18px 18px;
+  flex: 1;
+}
+.signature-panel section {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.signature-panel h3 {
+  margin: 0 0 13px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+.signature-panel h3 > span {
+  font-size: 10px;
+  color: #93a1b6;
+  font-weight: 400;
+}
+.checkerboard {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #e9edf3 25%, transparent 25%),
+    linear-gradient(-45deg, #e9edf3 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e9edf3 75%),
+    linear-gradient(-45deg, transparent 75%, #e9edf3 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+.signature-preview {
+  height: 114px;
+  border: 1px solid #dfe6f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+.signature-preview > img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.signature-preview > div {
+  text-align: center;
+  color: #95a2b6;
+  background: #ffffffdc;
+  padding: 8px;
+  border-radius: 5px;
+}
+.signature-preview p {
+  margin: 6px 0 3px;
+  font-size: 11px;
+  color: #72839c;
+}
+.signature-preview span {
+  font-size: 9px;
+}
+.signature-image-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: #8494aa;
+}
+.signature-panel section > .button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 7px;
+  min-height: 34px;
+  font-size: 11px;
+}
+.signature-help {
+  font-size: 10px;
+  line-height: 1.65;
+  color: #8c9ab0;
+  margin: 11px 0 0;
+}
+.signature-dimensions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.signature-dimensions label {
+  font-size: 10px;
+  color: #7c8ca4;
+}
+.signature-dimensions label > div {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dfe6ef;
+  border-radius: 5px;
+  padding-right: 8px;
+  margin-top: 6px;
+}
+.signature-dimensions input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 8px;
+  font-size: 11px;
+  color: #4d6280;
+}
+.signature-dimensions span {
+  font-size: 9px;
+  color: #98a4b7;
+}
+.signature-lock {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 10px;
+  margin-top: 12px;
+}
+.signature-lock input {
+  accent-color: var(--accent);
+}
+.signature-panel .signature-remove {
+  color: #be6370;
+}
+.signature-count {
+  font-size: 12px;
+  color: #617895;
+  margin: 0;
+}
+.signature-placement-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 110px;
+  overflow: auto;
+}
+.signature-placement-list button {
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid transparent;
+  background: #f7f9fc;
+  border-radius: 5px;
+  font-size: 10px;
+  color: #73849e;
+}
+.signature-placement-list button.active {
+  background: #eff5ff;
+  border-color: #a6c0f8;
+  color: #4379df;
+}
+.signature-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  color: #7d92ad;
+}
+.signature-privacy svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.signature-privacy p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.signature-panel footer {
+  display: flex;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+}
+.signature-panel footer > button {
+  flex: 1;
+  justify-content: center;
+  font-size: 11px;
+}
+.signature-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  touch-action: none;
+  user-select: none;
+}
+.signature-overlay.is-placing {
+  cursor: crosshair;
+}
+.signature-overlay.is-placing .signature-placement {
+  pointer-events: none;
+}
+.signature-overlay:focus {
+  outline: none;
+}
+.signature-placement {
+  position: absolute;
+  cursor: move;
+  outline: 1.5px solid transparent;
+  min-width: 1px;
+  min-height: 1px;
+  touch-action: none;
+}
+.signature-placement::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+.signature-placement.selected {
+  outline-color: #4c86f7;
+}
+.signature-placement > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.signature-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: white;
+  border: 1.5px solid #4c86f7;
+  border-radius: 2px;
+  z-index: 2;
+}
+.signature-handle.nw {
+  left: -5px;
+  top: -5px;
+  cursor: nwse-resize;
+}
+.signature-handle.ne {
+  right: -5px;
+  top: -5px;
+  cursor: nesw-resize;
+}
+.signature-handle.sw {
+  left: -5px;
+  bottom: -5px;
+  cursor: nesw-resize;
+}
+.signature-handle.se {
+  right: -5px;
+  bottom: -5px;
+  cursor: nwse-resize;
+}
+.signature-ghost {
+  position: absolute;
+  opacity: 0.65;
+  pointer-events: none;
+  outline: 1px dashed #6595ee;
+}
 .thumbnail-panel {
   width: 151px;
   flex-shrink: 0;
@@ -1449,7 +1756,7 @@ button:disabled:hover {
 }
 .reading-page {
   box-shadow: 0 3px 14px #23365517;
-  border: 1px solid #e2e7ef;
+  outline: 1px solid #e2e7ef;
 }
 .reader-canvas:has(.reading-page[style*="width: 1"]) {
   align-items: center;

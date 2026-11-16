@@ -60,7 +60,10 @@ export const useApp = create<State>((update) => ({
   set: (patch) =>
     update((state) => {
       const workspace = patch.workspace ?? state.workspace;
-      const dirtyWorkspaces = { ...state.dirtyWorkspaces };
+      const dirtyWorkspaces = {
+        ...state.dirtyWorkspaces,
+        ...patch.dirtyWorkspaces,
+      };
       if (patch.dirty !== undefined) dirtyWorkspaces[workspace] = patch.dirty;
       return {
         ...patch,

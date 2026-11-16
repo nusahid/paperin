@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import { z } from "zod";
 import type { ExportPlan } from "../shared/types";
 const exec = promisify(execFile);
-export type RegisteredFile = { path: string; password?: string };
+export type RegisteredFile = { path: string; password?: string; hash?: string };
 const source = z
   .object({
     id: z.string().uuid(),

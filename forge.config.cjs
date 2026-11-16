@@ -11,6 +11,7 @@ module.exports = {
       "resources/THIRD_PARTY_NOTICES.md",
     ],
     ignore: [
+      /^\/dist($|\/)/,
       /^\/src($|\/)/,
       /^\/tests($|\/)/,
       /^\/scripts($|\/)/,

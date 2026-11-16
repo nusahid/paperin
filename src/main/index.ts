@@ -11,7 +11,7 @@ import {
 import path from "node:path";
 import fs from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import squirrelStartup from "electron-squirrel-startup";
 import {
@@ -19,10 +19,18 @@ import {
   generateOutput,
   validatePlan,
   planSchema,
+  runQpdf,
   type RegisteredFile,
 } from "./pdf-engine";
 import { recoverExports, trackExport } from "./recovery";
 import type { LocalFile, Result, SavedFile } from "../shared/types";
+import {
+  MAX_PNG_BYTES,
+  MAX_SESSION_IMAGES,
+  signatureExportSchema,
+  type SignatureImage,
+} from "../shared/signature";
+import { signatureJob } from "./pdf-engine/signature/signature-service";
 
 app.commandLine.appendSwitch("disable-background-networking");
 app.commandLine.appendSwitch("disable-component-update");
@@ -34,6 +42,19 @@ protocol.registerSchemesAsPrivileged([
 ]);
 const files = new Map<string, RegisteredFile>();
 const saved = new Map<string, string>();
+type SignatureSession = {
+  documentId: string;
+  bytes: Uint8Array;
+  pageCount: number;
+  images: Map<string, SignatureImage>;
+};
+const signatureSessions = new Map<string, SignatureSession>();
+let signatureWorking = false;
+function signatureSession(id: unknown) {
+  const session = signatureSessions.get(z.string().uuid().parse(id));
+  if (!session) throw new Error("Please reopen the signature editor.");
+  return session;
+}
 let mainWindow: BrowserWindow;
 let exporting = false;
 const rendererRoot = path.resolve(__dirname, "../renderer");
@@ -68,7 +89,10 @@ async function register(filePath: string): Promise<LocalFile> {
       "This PDF couldn't be opened. The file may be damaged or have the wrong format.",
     );
   const id = randomUUID();
-  files.set(id, { path: actualPath });
+  files.set(id, {
+    path: actualPath,
+    hash: createHash("sha256").update(bytes).digest("hex"),
+  });
   return {
     id,
     name: path.basename(actualPath),
@@ -109,6 +133,177 @@ function handle(channel: string, callback: (payload: any) => Promise<unknown>) {
   });
 }
 function setupIPC() {
+  handle("signature:begin", async (id) => {
+    if (signatureWorking || exporting)
+      throw new Error("Another operation is in progress. Please wait.");
+    signatureWorking = true;
+    try {
+      const documentId = z.string().uuid().parse(id);
+      const file = files.get(documentId);
+      if (!file) throw new Error("Please reopen the document.");
+      const bytes = await fs.readFile(file.path);
+      if (
+        file.hash &&
+        createHash("sha256").update(bytes).digest("hex") !== file.hash
+      )
+        throw new Error(
+          "This PDF has changed on disk. Reopen it before adding a signature.",
+        );
+      const pageCount = await signatureJob<number>({
+        action: "inspect",
+        bytes,
+      });
+      signatureSessions.clear();
+      const sessionId = randomUUID();
+      signatureSessions.set(sessionId, {
+        documentId,
+        bytes,
+        pageCount,
+        images: new Map(),
+      });
+      return sessionId;
+    } finally {
+      signatureWorking = false;
+    }
+  });
+  handle("signature:pick", async (id) => {
+    if (signatureWorking || exporting)
+      throw new Error("Another operation is in progress. Please wait.");
+    const session = signatureSession(id);
+    signatureWorking = true;
+    try {
+      if (session.images.size >= MAX_SESSION_IMAGES)
+        throw new Error(
+          "This session supports up to 8 images. Cancel the editor to start a new session.",
+        );
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: "Choose a signature PNG",
+        filters: [{ name: "PNG image", extensions: ["png"] }],
+        properties: ["openFile"],
+      });
+      if (result.canceled || !result.filePaths[0]) return null;
+      const location = result.filePaths[0];
+      const file = await fs.open(location, "r");
+      let bytes: Buffer;
+      try {
+        const stat = await file.stat();
+        if (!stat.isFile()) throw new Error("Please choose a PNG image.");
+        if (stat.size > MAX_PNG_BYTES)
+          throw new Error("This image exceeds the supported size.");
+        // Bounded read also handles a file that grows after stat().
+        const buffer = Buffer.alloc(MAX_PNG_BYTES + 1);
+        let used = 0;
+        while (used < buffer.length) {
+          const { bytesRead } = await file.read(
+            buffer,
+            used,
+            buffer.length - used,
+            null,
+          );
+          if (!bytesRead) break;
+          used += bytesRead;
+        }
+        if (used > MAX_PNG_BYTES)
+          throw new Error("This image exceeds the supported size.");
+        bytes = buffer.subarray(0, used);
+      } finally {
+        await file.close();
+      }
+      const name = path.basename(location);
+      const dims = await signatureJob<{ widthPx: number; heightPx: number }>({
+        action: "image",
+        name,
+        bytes,
+      });
+      if (
+        [...session.images.values()].reduce(
+          (n, i) => n + i.widthPx * i.heightPx,
+          0,
+        ) +
+          dims.widthPx * dims.heightPx >
+        32_000_000
+      )
+        throw new Error(
+          "This session exceeds the supported image size. Cancel the editor to start a new session.",
+        );
+      const image: SignatureImage = {
+        id: randomUUID(),
+        name,
+        mimeType: "image/png",
+        ...dims,
+        bytes: new Uint8Array(bytes),
+      };
+      session.images.set(image.id, image);
+      return image;
+    } finally {
+      signatureWorking = false;
+    }
+  });
+  handle("signature:end", async (id) => {
+    z.string().uuid().parse(id);
+    if (signatureWorking || exporting)
+      throw new Error("Another operation is in progress. Please wait.");
+    signatureSessions.delete(id);
+  });
+  handle("signature:export", async (payload) => {
+    if (signatureWorking || exporting)
+      throw new Error("Another export is in progress. Please wait.");
+    const plan = signatureExportSchema.parse(payload);
+    const session = signatureSession(plan.sessionId);
+    exporting = true;
+    let staging: string | undefined;
+    try {
+      const source = files.get(session.documentId)!;
+      const result = await dialog.showSaveDialog(mainWindow, {
+        title: "Save signed PDF as",
+        defaultPath: `${path.basename(source.path, path.extname(source.path))}_signed.pdf`,
+        filters: [{ name: "PDF document", extensions: ["pdf"] }],
+        properties: ["showOverwriteConfirmation"],
+      });
+      if (result.canceled || !result.filePath) return null;
+      const destination = result.filePath.toLowerCase().endsWith(".pdf")
+        ? result.filePath
+        : `${result.filePath}.pdf`;
+      await assertNotSource(destination, files);
+      mainWindow.webContents.send("pdf:progress", "Adding your signatures…");
+      const output = await signatureJob<Uint8Array>({
+        action: "export",
+        bytes: session.bytes,
+        placements: plan.placements,
+        images: [...session.images.values()],
+      });
+      staging = await fs.mkdtemp(
+        path.join(path.dirname(destination), ".folio-export-"),
+      );
+      await trackExport(journal(), staging);
+      const temporary = path.join(staging, "signed.pdf");
+      await fs.writeFile(temporary, output, { flag: "wx" });
+      mainWindow.webContents.send("pdf:progress", "Checking the signed PDF…");
+      await runQpdf(qpdf(), ["--check", temporary]);
+      if (
+        Number((await runQpdf(qpdf(), ["--show-npages", temporary])).trim()) !==
+        session.pageCount
+      )
+        throw new Error("Couldn't save the signed PDF.");
+      await assertNotSource(destination, files);
+      await fs.rename(temporary, destination);
+      const id = randomUUID();
+      saved.set(id, destination);
+      return { id, name: path.basename(destination) };
+    } finally {
+      exporting = false;
+      if (!mainWindow.isDestroyed())
+        mainWindow.webContents.send("pdf:progress", null);
+      if (staging) {
+        try {
+          await fs.rm(staging, { recursive: true, force: true });
+          await fs.rm(journal(), { force: true });
+        } catch {
+          /* Startup recovery retries owned staging cleanup. */
+        }
+      }
+    }
+  });
   handle("files:pick", async (multiple) => {
     z.boolean().parse(multiple);
     const result = await dialog.showOpenDialog(mainWindow, {
@@ -140,7 +335,7 @@ function setupIPC() {
     file.password = password;
   });
   handle("pdf:export", async (payload) => {
-    if (exporting)
+    if (exporting || signatureWorking)
       throw new Error("Another export is in progress. Please wait.");
     exporting = true;
     let staging: string | undefined;

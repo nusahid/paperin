@@ -1,3 +1,4 @@
+import type { SignatureExport, SignatureImage } from "./signature";
 export type Workspace = "home" | "reader" | "merge" | "split";
 export type Source = { id: string; pages: number[] };
 export type Output = { name: string; sources: Source[] };
@@ -16,6 +17,10 @@ export interface FolioAPI {
   sample(): Promise<Result<LocalFile[]>>;
   setPassword(id: string, password: string): Promise<Result<void>>;
   export(plan: ExportPlan): Promise<Result<SavedFile[] | null>>;
+  beginSignature(documentId: string): Promise<Result<string>>;
+  pickSignature(sessionId: string): Promise<Result<SignatureImage | null>>;
+  endSignature(sessionId: string): Promise<Result<void>>;
+  exportSignature(plan: SignatureExport): Promise<Result<SavedFile | null>>;
   openSaved(id: string): Promise<Result<LocalFile[]>>;
   showSaved(id: string): Promise<Result<void>>;
   window(action: "minimize" | "maximize" | "close"): void;

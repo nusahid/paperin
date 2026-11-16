@@ -33,6 +33,7 @@ import { Merge } from "./features/Merge";
 import { Split } from "./features/Split";
 import { Modal } from "./components/Modal";
 import { Preview } from "./components/Preview";
+import { useSignature } from "./features/signature/signature.store";
 type PasswordRequest = {
   incorrect: boolean;
   resolve: (password: string) => void;
@@ -121,7 +122,10 @@ export function App() {
         selected: [],
         dirty: false,
       });
-    else set({ workspace: "reader", activeId: added[0].id });
+    else {
+      await useSignature.getState().end();
+      set({ workspace: "reader", activeId: added[0].id });
+    }
   }
   async function importAction(
     action: () => Promise<Result<LocalFile[]>>,
@@ -140,7 +144,7 @@ export function App() {
     }
   }
   async function open(target: Workspace) {
-    if (target === "split" && useApp.getState().dirty) {
+    if (["split", "reader"].includes(target) && useApp.getState().dirty) {
       setImportTarget(target);
       return;
     }
@@ -221,10 +225,10 @@ export function App() {
           set({ error: "Please drop PDF files only." });
           return;
         }
-        if (workspace === "split" && dirty) {
+        if (["split", "reader"].includes(workspace) && dirty) {
           set({
             error:
-              "Save your current selection or use Replace file before dropping a new document.",
+              "Save your current changes or use Open PDF before dropping a new document.",
           });
           return;
         }
@@ -458,8 +462,8 @@ export function App() {
           onClose={() => setImportTarget(null)}
         >
           <p className="modal-description">
-            Your current page selection hasn't been exported. Opening another
-            PDF will clear this selection.
+            Your current changes haven't been exported. Opening another PDF will
+            clear these changes.
           </p>
           <div className="modal-actions">
             <button

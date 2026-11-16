@@ -13,10 +13,18 @@ import {
   Scissors,
   Search,
   X,
+  PenLine,
+  Undo2,
+  Redo2,
+  Save,
 } from "lucide-react";
 import { useApp, type Document } from "../store";
 import { PdfPage } from "../components/PdfPage";
 import { EmptyState } from "../components/EmptyState";
+import { Modal } from "../components/Modal";
+import { useSignature } from "./signature/signature.store";
+import { SignatureOverlay } from "./signature/SignatureOverlay";
+import { SignaturePanel, saveSignatures } from "./signature/SignaturePanel";
 export function Reader({
   onOpen,
   onOrganize,
@@ -26,10 +34,47 @@ export function Reader({
 }) {
   const { documents, activeId } = useApp();
   const doc = documents.find((d) => d.id === activeId);
+  const signature = useSignature();
+  const signing =
+    !!doc && signature.documentId === doc.id && !!signature.sessionId;
+  const busy = useApp((s) => s.busy);
+  const [exitAction, setExitAction] = useState<"cancel" | "close" | null>(null);
+  async function exitEditor(action: "cancel" | "close") {
+    if (useApp.getState().busy) return;
+    if (signing) await signature.end();
+    if (action === "close") useApp.getState().set({ activeId: null });
+    setExitAction(null);
+  }
+  function requestExit(action: "cancel" | "close") {
+    if (useApp.getState().dirtyWorkspaces.reader) setExitAction(action);
+    else void exitEditor(action);
+  }
+  async function begin() {
+    if (!doc || useApp.getState().busy) return;
+    useApp
+      .getState()
+      .set({ busy: "Checking this PDF for signing…", error: null, saved: [] });
+    try {
+      const result = await window.folio.beginSignature(doc.id);
+      if (!result.ok) throw new Error(result.error);
+      signature.begin(doc.id, result.value);
+      setSearchOpen(false);
+    } catch (error) {
+      useApp.getState().set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Couldn't open the signature editor.",
+      });
+    } finally {
+      useApp.getState().set({ busy: null });
+    }
+  }
   const [page, setPage] = useState(1);
   const [thumbs, setThumbs] = useState(true);
   const [zoom, setZoom] = useState("fit-page");
   const [canvasSize, setCanvasSize] = useState({ width: 760, height: 650 });
+  const [pageSize, setPageSize] = useState({ width: 595.28, height: 841.89 });
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<number[]>([]);
@@ -39,6 +84,22 @@ export function Reader({
   const canvas = useRef<HTMLDivElement>(null);
   const pages = useRef(new Map<number, HTMLDivElement>());
   const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    let canceled = false;
+    if (doc)
+      void doc.pdf
+        .getPage(Math.min(page, doc.pageCount))
+        .then((p) => {
+          const v = p.getViewport({ scale: 1 });
+          if (!canceled) setPageSize({ width: v.width, height: v.height });
+        })
+        .catch(() => {
+          /* Individual pages show a rendering error. */
+        });
+    return () => {
+      canceled = true;
+    };
+  }, [doc?.id, page]);
   useEffect(() => {
     setPage(1);
     setPageInput("1");
@@ -56,7 +117,7 @@ export function Reader({
     );
     observer.observe(canvas.current);
     return () => observer.disconnect();
-  }, [!!doc, thumbs]);
+  }, [!!doc, thumbs, signing]);
   useEffect(() => {
     if (!canvas.current || !doc) return;
     const observer = new IntersectionObserver(
@@ -139,6 +200,14 @@ export function Reader({
       }
       if ((event.target as HTMLElement).matches("input, select, textarea"))
         return;
+      if (document.querySelector("dialog[open]") || useApp.getState().busy)
+        return;
+      if (
+        signing &&
+        useSignature.getState().selectedId &&
+        event.key.startsWith("Arrow")
+      )
+        return;
       if (event.key === "ArrowLeft" || event.key === "PageUp") {
         event.preventDefault();
         goTo(page - 1);
@@ -150,7 +219,7 @@ export function Reader({
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [page, doc]);
+  }, [page, doc, signing]);
   if (!doc)
     return (
       <div className="workspace">
@@ -167,14 +236,24 @@ export function Reader({
       </div>
     );
   const width = Math.max(
-    200,
+    100,
     zoom === "fit-width"
       ? canvasSize.width - 84
       : zoom === "fit-page"
-        ? Math.min(canvasSize.width - 84, (canvasSize.height - 52) / 1.4142)
+        ? canvasSize.width - 84
         : (595.28 * Number(zoom)) / 100,
   );
-  const percentage = Math.round((width / 595.28) * 100);
+  const percentage = zoom.startsWith("fit")
+    ? Math.round(
+        100 *
+          Math.min(
+            width / pageSize.width,
+            zoom === "fit-page"
+              ? Math.max(100, canvasSize.height - 52) / pageSize.height
+              : Infinity,
+          ),
+      )
+    : Number(zoom);
   return (
     <div className="reader-workspace">
       <div className="reader-tabbar">
@@ -184,7 +263,8 @@ export function Reader({
           <button
             className="icon-button small"
             aria-label="Close document"
-            onClick={() => useApp.getState().set({ activeId: null })}
+            disabled={!!busy}
+            onClick={() => requestExit("close")}
           >
             <X size={14} />
           </button>
@@ -197,8 +277,37 @@ export function Reader({
           <Plus size={18} />
         </button>
       </div>
-      <div className="reader-toolbar">
+      <div className={`reader-toolbar ${signing ? "signature-toolbar" : ""}`}>
         <div className="toolbar-group">
+          {signing && (
+            <>
+              <button
+                className="button secondary compact"
+                disabled={!!busy}
+                onClick={() => requestExit("cancel")}
+              >
+                Cancel
+              </button>
+              <button
+                className="icon-button"
+                aria-label="Undo"
+                title="Undo (Ctrl+Z)"
+                disabled={!!busy || !signature.past.length}
+                onClick={signature.undo}
+              >
+                <Undo2 size={17} />
+              </button>
+              <button
+                className="icon-button"
+                aria-label="Redo"
+                title="Redo (Ctrl+Shift+Z)"
+                disabled={!!busy || !signature.future.length}
+                onClick={signature.redo}
+              >
+                <Redo2 size={17} />
+              </button>
+            </>
+          )}
           <button
             className="icon-button"
             onClick={() => setThumbs(!thumbs)}
@@ -211,7 +320,10 @@ export function Reader({
               <PanelLeftOpen size={18} />
             )}
           </button>
-          <span className="toolbar-file-name" title={doc.name}>
+          <span
+            className={`toolbar-file-name ${signing ? "signature-hidden" : ""}`}
+            title={doc.name}
+          >
             {doc.name}
           </span>
         </div>
@@ -301,22 +413,44 @@ export function Reader({
           >
             <Search size={18} />
           </button>
+          {!signing && (
+            <button
+              className="icon-button"
+              aria-label="Merge this PDF"
+              title="Merge this PDF"
+              onClick={() => onOrganize("merge", doc)}
+            >
+              <Layers2 size={18} />
+            </button>
+          )}
+          {!signing && (
+            <button
+              className="icon-button"
+              aria-label="Split this PDF"
+              title="Split this PDF"
+              onClick={() => onOrganize("split", doc)}
+            >
+              <Scissors size={18} />
+            </button>
+          )}
           <button
-            className="icon-button"
-            aria-label="Merge this PDF"
-            title="Merge this PDF"
-            onClick={() => onOrganize("merge", doc)}
+            className={`button compact ${signing ? "secondary" : "primary"}`}
+            disabled={!!busy || (signing && !signature.current.imageId)}
+            onClick={() => (signing ? signature.place(true) : void begin())}
           >
-            <Layers2 size={18} />
+            <PenLine size={15} />
+            Add Signature
           </button>
-          <button
-            className="icon-button"
-            aria-label="Split this PDF"
-            title="Split this PDF"
-            onClick={() => onOrganize("split", doc)}
-          >
-            <Scissors size={18} />
-          </button>
+          {signing && (
+            <button
+              className="button primary compact"
+              disabled={!!busy || !signature.current.placements.length}
+              onClick={() => void saveSignatures()}
+            >
+              <Save size={15} />
+              Save As
+            </button>
+          )}
         </div>
       </div>
       {searchOpen && (
@@ -366,7 +500,7 @@ export function Reader({
         </div>
       )}
       <div className="reader-body">
-        {thumbs && (
+        {thumbs && !signing && (
           <aside className="thumbnail-panel">
             <div className="thumbnail-heading">
               Pages <span>{doc.pageCount}</span>
@@ -406,18 +540,66 @@ export function Reader({
                 width={width}
                 text
                 search={query}
+                scale={zoom.startsWith("fit") ? undefined : Number(zoom) / 100}
+                maxHeight={
+                  zoom === "fit-page"
+                    ? Math.max(100, canvasSize.height - 52)
+                    : undefined
+                }
+                overlay={
+                  signing
+                    ? (viewport) => (
+                        <SignatureOverlay viewport={viewport} pageIndex={i} />
+                      )
+                    : undefined
+                }
               />
             </div>
           ))}
         </div>
+        {signing && (
+          <SignaturePanel doc={doc} onCancel={() => requestExit("cancel")} />
+        )}
       </div>
       <div className="reader-status">
         <span>
           Page {page} of {doc.pageCount}
         </span>
-        <span>All changes stay on your device</span>
+        <span>
+          {signing
+            ? signature.placing
+              ? "Click a page to place your signature · Esc to cancel"
+              : "Signature mode · All changes stay on your device"
+            : "All changes stay on your device"}
+        </span>
         <span>{percentage}%</span>
       </div>
+      {exitAction && (
+        <Modal
+          title="Discard signature changes?"
+          onClose={() => setExitAction(null)}
+        >
+          <p className="modal-description">
+            Your signature placements haven't been saved. Discarding clears the
+            images and edits from this session.
+          </p>
+          <div className="modal-actions">
+            <button
+              className="button secondary"
+              autoFocus
+              onClick={() => setExitAction(null)}
+            >
+              Keep editing
+            </button>
+            <button
+              className="button primary"
+              onClick={() => void exitEditor(exitAction)}
+            >
+              Discard changes
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { TextLayer } from "pdfjs-dist";
-import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
+import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from "pdfjs-dist";
+import type { PageViewport } from "pdfjs-dist/types/src/display/page_viewport";
 import { AlertCircle } from "lucide-react";
 export function PdfPage({
   pdf,
@@ -8,12 +9,18 @@ export function PdfPage({
   width,
   text = false,
   search = "",
+  maxHeight,
+  scale,
+  overlay,
 }: {
   pdf: PDFDocumentProxy;
   page: number;
   width: number;
   text?: boolean;
   search?: string;
+  maxHeight?: number;
+  scale?: number;
+  overlay?: (viewport: PageViewport) => React.ReactNode;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -22,6 +29,21 @@ export function PdfPage({
   const [ratio, setRatio] = useState(1.4142);
   const [error, setError] = useState(false);
   const [textVersion, setTextVersion] = useState(0);
+  const [sourcePage, setSourcePage] = useState<PDFPageProxy | null>(null);
+  const natural = sourcePage?.getViewport({ scale: 1 });
+  const displayScale =
+    scale ??
+    Math.min(
+      width / (natural?.width ?? width),
+      maxHeight && natural ? maxHeight / natural.height : Infinity,
+    );
+  const displayViewport = sourcePage?.getViewport({ scale: displayScale });
+  const placeholderWidth =
+    scale !== undefined
+      ? 595.28 * scale
+      : maxHeight
+        ? Math.min(width, maxHeight / ratio)
+        : width;
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -50,7 +72,15 @@ export function PdfPage({
         const source = await pdf.getPage(page);
         if (disposed) return;
         const natural = source.getViewport({ scale: 1 });
-        const viewport = source.getViewport({ scale: width / natural.width });
+        const viewport = source.getViewport({
+          scale:
+            scale ??
+            Math.min(
+              width / natural.width,
+              maxHeight ? maxHeight / natural.height : Infinity,
+            ),
+        });
+        setSourcePage(source);
         setRatio(natural.height / natural.width);
         const target = canvas.current!;
         const dpr = Math.min(window.devicePixelRatio || 1, text ? 2 : 1.5);
@@ -89,7 +119,7 @@ export function PdfPage({
       renderTask?.cancel();
       textLayer?.cancel();
     };
-  }, [pdf, page, width, visible, text]);
+  }, [pdf, page, width, visible, text, maxHeight, scale]);
   useEffect(() => {
     if (!layer.current) return;
     // Highlight text spans without replacing PDF.js' selectable text content.
@@ -109,7 +139,10 @@ export function PdfPage({
     <div
       ref={root}
       className={`pdf-page ${text ? "reading-page" : ""}`}
-      style={{ width, height: width * ratio }}
+      style={{
+        width: displayViewport?.width ?? placeholderWidth,
+        height: displayViewport?.height ?? placeholderWidth * ratio,
+      }}
     >
       <canvas ref={canvas} style={{ width: "100%", height: "100%" }} />
       {text && (
@@ -125,6 +158,7 @@ export function PdfPage({
           <span>Page unavailable</span>
         </div>
       )}
+      {visible && displayViewport && !error && overlay?.(displayViewport)}
     </div>
   );
 }
