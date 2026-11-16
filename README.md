@@ -16,8 +16,6 @@ Paperin is an offline PDF workspace for Windows. No account or document uploads 
 
 The download button links **directly to the `Paperin-Setup.exe` installer** from the latest public release. You only need this one file. There is no need to install Node.js, npm, Git, or qpdf separately.
 
-> **Release status:** the public installer is not available yet. The download link will become active once a public release containing `Paperin-Setup.exe` is published in `nusahid/paperin`. See the [publishing guide](docs/GITHUB-RELEASES.md).
-
 ### Quick installation
 
 1. Click **Download Paperin for Windows (.exe)** and wait for the download to finish.

@@ -4,8 +4,6 @@ This guide explains how to install the ready-to-use Windows app. Download the in
 
 [⬇ Download Paperin for Windows (.exe)][download] · [Back to README](../README.md)
 
-> The download link requires a public release containing `Paperin-Setup.exe` in `nusahid/paperin`. If it is not available yet, the maintainer must publish the installer first. See the [release guide](GITHUB-RELEASES.md).
-
 ## Before you start
 
 - Use a **Windows x64** computer. Check **Settings → System → About → System type** to view your system architecture.
