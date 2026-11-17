@@ -49,6 +49,17 @@ jobs:
       - name: Electron end-to-end tests
         run: npm run test:e2e
 
+      - name: Save failed UI test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Paperin-UI-test-diagnostics
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            test-results/
+            playwright-report/
+
       - name: Build Windows installer
         run: npm run make
 

@@ -45,6 +45,31 @@ const order = () =>
     .evaluateAll((elements) =>
       elements.map((e) => Number((e as HTMLElement).dataset.original)),
     );
+async function dragPage(id: number, targetId: number, after = false) {
+  const source = card(id),
+    target = card(targetId);
+  await source.scrollIntoViewIfNeeded();
+  await source.hover({ position: { x: 70, y: 60 } });
+  await page.mouse.down();
+  try {
+    // Start the native drag before scrolling the target into view. A single
+    // dragTo move can reach the target without issuing dragover on CI runners.
+    const start = await source.boundingBox();
+    if (!start) throw new Error("The drag source is unavailable.");
+    await page.mouse.move(start.x + 82, start.y + 72, { steps: 6 });
+    await expect(source).toHaveClass(/\bmoving\b/);
+    await target.scrollIntoViewIfNeeded();
+    const box = await target.boundingBox();
+    if (!box) throw new Error("The drop target is unavailable.");
+    const position = { x: after ? box.width - 8 : 8, y: 80 };
+    // Two target moves reliably deliver dragover, as recommended by Playwright.
+    await target.hover({ position });
+    await target.hover({ position });
+    await expect(page.locator(".insert-before, .insert-after")).toBeVisible();
+  } finally {
+    await page.mouse.up();
+  }
+}
 test.beforeAll(async () => {
   temp = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-rearrange-e2e-"));
   const pdf = await PDFDocument.create();
@@ -93,18 +118,14 @@ test("rearranges single and multiple pages, previews, saves and reopens offline"
   await page.screenshot({
     path: "test-results/screenshots/rearrange-initial.png",
   });
-  await card(8).scrollIntoViewIfNeeded();
-  await card(8).dragTo(card(2), { targetPosition: { x: 8, y: 80 } });
+  await dragPage(8, 2);
   await expect.poll(order).toEqual([1, 8, 2, 3, 4, 5, 6, 7]);
   await page.getByRole("button", { name: "Undo", exact: true }).click();
   await expect.poll(order).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   await card(2).click();
   await card(4).click({ modifiers: ["Control"] });
   await expect(card(2)).toHaveAttribute("aria-pressed", "true");
-  const target = await card(8).boundingBox();
-  await card(2).dragTo(card(8), {
-    targetPosition: { x: target!.width - 6, y: 80 },
-  });
+  await dragPage(2, 8, true);
   await expect.poll(order).toEqual([1, 3, 5, 6, 7, 8, 2, 4]);
   await page
     .getByRole("button", { name: "Reverse Pages", exact: true })
