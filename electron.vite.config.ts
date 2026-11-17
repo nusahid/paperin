@@ -8,6 +8,7 @@ export default defineConfig({
         input: {
           index: "src/main/index.ts",
           "signature-worker": "src/main/signature-worker.ts",
+          "conversion-worker": "src/main/conversion-worker.ts",
         },
       },
     },

@@ -4,7 +4,7 @@
 
 # Paperin
 
-**Read, merge, split, and add signature images to PDFs right on your computer.**
+**Read, merge, split, convert, and add signature images to PDFs right on your computer.**
 
 Paperin is an offline PDF workspace for Windows. No account or document uploads required. Free and open source under the MIT license.
 
@@ -31,14 +31,15 @@ The installer is currently unsigned. If Windows displays an unknown publisher wa
 
 ## Features
 
-| Feature                      | What you can do                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Reader**                   | Read PDFs, browse thumbnails, navigate pages, zoom from 25–300%, copy text, and search for text. |
-| **Merge**                    | Combine multiple PDFs, arrange their order, and preview the result before saving.                |
-| **Split**                    | Extract pages, remove pages from a copy, split by ranges, or create a PDF every N pages.         |
-| **Add Signature**            | Import a PNG signature image, adjust its position and size, and save a new PDF.                  |
-| **Local processing**         | Open and process documents without accounts, uploads, or cloud services.                         |
-| **Original file protection** | Save results to new files. The app prevents using a source file as an export destination.        |
+| Feature                      | What you can do                                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Reader**                   | Read PDFs, browse thumbnails, navigate pages, zoom from 25–300%, copy text, and search for text.                                 |
+| **Merge**                    | Combine multiple PDFs, arrange their order, and preview the result before saving.                                                |
+| **Split**                    | Extract pages, remove pages from a copy, split by ranges, or create a PDF every N pages.                                         |
+| **Convert**                  | Combine JPG/PNG images into a PDF, or export PDF pages as JPG/PNG with page selection, DPI, preview, progress, and cancellation. |
+| **Add Signature**            | Import a PNG signature image, adjust its position and size, and save a new PDF.                                                  |
+| **Local processing**         | Open and process documents without accounts, uploads, or cloud services.                                                         |
+| **Original file protection** | Save results to new files. The app prevents using a source file as an export destination.                                        |
 
 The app and documentation are in English. The guides use the button labels shown in the app.
 
@@ -47,6 +48,7 @@ The app and documentation are in English. The guides use the button labels shown
 - Packages are provided for **Windows x64**. Installers for macOS, Linux, 32-bit Windows, and Windows ARM are not currently available.
 - Internet access is needed to download the installer. Once installed, you can read and process PDFs offline.
 - The current import limit is **512 MB per PDF**. Memory usage increases with the size and number of open documents.
+- Converter images and rendered pages are limited to **40 megapixels** and 32,767 pixels per dimension. Image inputs are limited to 128 MB each and 512 MB per batch. Only one export runs at a time.
 - Search works on PDFs with a text layer. OCR for scanned documents is not available.
 - Added signatures are **visual images**. They do not provide identity verification or certificate-based digital signing.
 - The signature editor does not support encrypted PDFs, documents with existing digital signatures, or signature form fields.
@@ -64,6 +66,7 @@ Save your work before closing the app. If a multi-file export fails partway thro
 - [Download, installation, updates, uninstalling, and troubleshooting](docs/INSTALLATION.md)
 - [Using Reader, Merge, Split, and Add Signature](docs/USER-GUIDE.md)
 - [Source setup, architecture, builds, and testing](docs/DEVELOPMENT.md)
+- [Converter implementation and verification notes (Indonesian)](docs/CONVERTER.md)
 - [Publishing source code and installers through GitHub Releases](docs/GITHUB-RELEASES.md)
 
 ## For developers

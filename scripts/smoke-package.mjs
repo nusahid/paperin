@@ -112,13 +112,44 @@ try {
     throw new Error("Packaged qpdf export failed: " + JSON.stringify(result));
   const pdf = await PDFDocument.load(await fs.readFile(output));
   expect(pdf.getPageCount()).toBe(2);
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Convert", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: /Image to PDF Combine images/ })
+    .click();
+  await expect(page.locator(".convert-image-card")).toHaveCount(1);
+  const convertedPdf = path.join(temp, "packaged-converted.pdf");
+  await app.evaluate(({ dialog }, filePath) => {
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath });
+  }, convertedPdf);
+  await page.getByRole("button", { name: "Create PDF", exact: true }).click();
+  await expect(page.getByText("Conversion completed.")).toBeVisible();
+  expect(
+    (await PDFDocument.load(await fs.readFile(convertedPdf))).getPageCount(),
+  ).toBe(1);
+  await page.getByRole("button", { name: "Open PDF", exact: true }).click();
+  await expect(page.getByText("Page 1 of 1", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Convert PDF to images" }).click();
+  await page.getByLabel("Output format", { exact: true }).selectOption("png");
+  await page.getByLabel("Resolution", { exact: true }).selectOption("72");
+  const convertedImage = path.join(temp, "packaged-converted.png");
+  await app.evaluate(({ dialog }, filePath) => {
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath });
+  }, convertedImage);
+  await page.locator(".convert-export button").click();
+  await expect(page.getByText("Conversion completed.")).toBeVisible();
+  expect(
+    PNG.sync.read(await fs.readFile(convertedImage)).width,
+  ).toBeGreaterThan(500);
   expect(errors).toEqual([]);
   expect(remote).toEqual([]);
   await page.screenshot({
     path: "test-results/screenshots/packaged-reader.png",
   });
   console.log(
-    "Packaged Windows app: offline PDF.js reader, text layer, signature worker/PNG import/signed PDF export, and native qpdf page export all passed.",
+    "Packaged Windows app: offline reader, signatures, qpdf, Image to PDF worker and PDF to PNG export all passed.",
   );
 } finally {
   if (app) await app.evaluate(({ app }) => app.exit());

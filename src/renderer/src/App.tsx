@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Upload,
   X,
+  ArrowLeftRight,
 } from "lucide-react";
 import type {
   ExportPlan,
@@ -35,6 +36,10 @@ import { Split } from "./features/Split";
 import { Modal } from "./components/Modal";
 import { Preview } from "./components/Preview";
 import { useSignature } from "./features/signature/signature.store";
+import { Convert } from "./features/converter/Convert";
+import { useConverter } from "./features/converter/store";
+import { importImage, unwrap } from "./features/converter/engine";
+import type { ConversionImport } from "../../shared/conversion";
 type PasswordRequest = {
   incorrect: boolean;
   resolve: (password: string) => void;
@@ -53,6 +58,7 @@ export function App() {
   const [importTarget, setImportTarget] = useState<Workspace | null>(null);
   const dragDepth = useRef(0);
   const importing = useRef(false);
+  const [mixedImport, setMixedImport] = useState<ConversionImport | null>(null);
   useEffect(
     () => window.paperin.onProgress((message) => set({ busy: message })),
     [],
@@ -123,7 +129,20 @@ export function App() {
         selected: [],
         dirty: false,
       });
-    else {
+    else if (target === "convert") {
+      useConverter.getState().set(
+        {
+          mode: "pdf",
+          docId: added[0].id,
+          currentPage: 1,
+          selected: [],
+          selection: "all",
+          result: null,
+        },
+        false,
+      );
+      set({ workspace: "convert", dirty: false });
+    } else {
       await useSignature.getState().end();
       set({ workspace: "reader", activeId: added[0].id });
     }
@@ -145,6 +164,10 @@ export function App() {
     }
   }
   async function open(target: Workspace) {
+    if (target === "convert" && useConverter.getState().mode !== "pdf") {
+      await importConversion(() => window.paperin.conversionPick("image"));
+      return;
+    }
     if (["split", "reader"].includes(target) && useApp.getState().dirty) {
       setImportTarget(target);
       return;
@@ -153,6 +176,76 @@ export function App() {
       () => window.paperin.pickFiles(target === "merge" || target === "home"),
       target,
     );
+  }
+  async function acceptConversion(value: ConversionImport) {
+    if (
+      value.files.some((file) => file.kind === "image") &&
+      value.files.some((file) => file.kind === "pdf")
+    ) {
+      setMixedImport(value);
+      return;
+    }
+    const errors = [...value.errors];
+    const imageFiles = value.files.filter((file) => file.kind === "image");
+    if (imageFiles.length) {
+      const added = [];
+      for (const [index, input] of imageFiles.entries()) {
+        set({ busy: `Opening image ${index + 1} of ${imageFiles.length}…` });
+        try {
+          added.push(await importImage(input));
+        } catch {
+          errors.push(`${input.name}: This image couldn't be opened.`);
+          await window.paperin.conversionRelease([input.id]);
+        }
+      }
+      if (added.length) {
+        const converter = useConverter.getState();
+        converter.set({
+          mode: "image",
+          images: [...converter.images, ...added],
+          result: null,
+        });
+        set({ workspace: "convert", saved: [] });
+      }
+    } else {
+      const pdfs = value.files.filter((file) => file.kind === "pdf");
+      if (pdfs.length > 1)
+        errors.push("Choose one PDF at a time for conversion.");
+      else if (pdfs.length) {
+        const file = pdfs[0];
+        await accept(
+          {
+            ok: true,
+            value: [
+              {
+                ...file,
+                bytes: unwrap(await window.paperin.conversionRead(file.id)),
+              },
+            ],
+          },
+          "convert",
+        );
+      }
+    }
+    if (errors.length) set({ error: errors.join("\n") });
+  }
+  async function importConversion(
+    action: () => Promise<Result<ConversionImport>>,
+  ) {
+    if (importing.current || useApp.getState().busy) return;
+    importing.current = true;
+    set({ busy: "Opening files…", error: null });
+    try {
+      await acceptConversion(unwrap(await action()));
+    } catch (error) {
+      set({
+        error:
+          error instanceof Error ? error.message : "Couldn't open these files.",
+      });
+    } finally {
+      importing.current = false;
+      set({ busy: null });
+    }
   }
   function organize(mode: "merge" | "split", doc: Document) {
     if (mode === "merge")
@@ -196,6 +289,7 @@ export function App() {
     { id: "reader" as const, label: "Reader", Icon: BookOpen },
     { id: "merge" as const, label: "Merge", Icon: Layers2 },
     { id: "split" as const, label: "Split", Icon: Scissors },
+    { id: "convert" as const, label: "Convert", Icon: ArrowLeftRight },
   ];
   return (
     <div
@@ -222,6 +316,13 @@ export function App() {
         dragDepth.current = 0;
         setDragging(false);
         const files = Array.from(event.dataTransfer.files);
+        if (
+          workspace === "convert" ||
+          files.some((f) => /\.(jpe?g|png)$/i.test(f.name))
+        ) {
+          void importConversion(() => window.paperin.conversionImport(files));
+          return;
+        }
         if (files.some((f) => !f.name.toLowerCase().endsWith(".pdf"))) {
           set({ error: "Please drop PDF files only." });
           return;
@@ -321,7 +422,31 @@ export function App() {
             />
           )}
           {workspace === "reader" && (
-            <Reader onOpen={() => void open("reader")} onOrganize={organize} />
+            <Reader
+              onOpen={() => void open("reader")}
+              onOrganize={organize}
+              onConvert={(doc, page) => {
+                if (dirty) {
+                  set({
+                    error:
+                      "Save or close the signature editor before converting this PDF.",
+                  });
+                  return;
+                }
+                useConverter.getState().set(
+                  {
+                    mode: "pdf",
+                    docId: doc.id,
+                    currentPage: page,
+                    selection: "all",
+                    selected: [],
+                    result: null,
+                  },
+                  false,
+                );
+                set({ workspace: "convert", dirty: false });
+              }}
+            />
           )}
           {workspace === "merge" && (
             <Merge
@@ -337,12 +462,29 @@ export function App() {
               onExport={exportPdf}
             />
           )}
+          {workspace === "convert" && (
+            <Convert
+              onOpenImages={() =>
+                void importConversion(() =>
+                  window.paperin.conversionPick("image"),
+                )
+              }
+              onOpenPdf={() =>
+                void importConversion(() =>
+                  window.paperin.conversionPick("pdf"),
+                )
+              }
+              onOpenSaved={(id) =>
+                void importAction(() => window.paperin.openSaved(id), "reader")
+              }
+            />
+          )}
         </main>
       </div>
       {dragging && (
         <div className="drop-overlay">
           <Upload size={48} strokeWidth={1.4} />
-          <h2>A new home for your PDFs.</h2>
+          <h2>Drop your files here.</h2>
           <p>
             Drop to{" "}
             {workspace === "merge"
@@ -427,6 +569,54 @@ export function App() {
           onClose={() => setPreview(null)}
           onExport={exportPdf}
         />
+      )}
+      {mixedImport && (
+        <Modal
+          title="Choose a conversion"
+          onClose={async () => {
+            const value = mixedImport;
+            setMixedImport(null);
+            await window.paperin.conversionRelease(
+              value.files
+                .filter((file) => file.kind === "image")
+                .map((file) => file.id),
+            );
+          }}
+        >
+          <p className="modal-description">
+            You dropped both images and PDF files. Choose which files to use for
+            this conversion.
+          </p>
+          <div className="modal-actions">
+            {(["image", "pdf"] as const).map((kind) => (
+              <button
+                key={kind}
+                className={`button ${kind === "image" ? "primary" : "secondary"}`}
+                onClick={() => {
+                  const value = mixedImport;
+                  setMixedImport(null);
+                  void importConversion(async () => {
+                    if (kind === "pdf")
+                      await window.paperin.conversionRelease(
+                        value.files
+                          .filter((file) => file.kind === "image")
+                          .map((file) => file.id),
+                      );
+                    return {
+                      ok: true,
+                      value: {
+                        ...value,
+                        files: value.files.filter((file) => file.kind === kind),
+                      },
+                    };
+                  });
+                }}
+              >
+                {kind === "image" ? "Image to PDF" : "PDF to Image"}
+              </button>
+            ))}
+          </div>
+        </Modal>
       )}
       {pendingNav && (
         <Modal

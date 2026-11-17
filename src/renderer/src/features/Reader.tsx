@@ -17,6 +17,7 @@ import {
   Undo2,
   Redo2,
   Save,
+  FileImage,
 } from "lucide-react";
 import { useApp, type Document } from "../store";
 import { PdfPage } from "../components/PdfPage";
@@ -28,9 +29,11 @@ import { SignaturePanel, saveSignatures } from "./signature/SignaturePanel";
 export function Reader({
   onOpen,
   onOrganize,
+  onConvert,
 }: {
   onOpen: () => void;
   onOrganize: (mode: "merge" | "split", doc: Document) => void;
+  onConvert: (doc: Document, page: number) => void;
 }) {
   const { documents, activeId } = useApp();
   const doc = documents.find((d) => d.id === activeId);
@@ -431,6 +434,17 @@ export function Reader({
               onClick={() => onOrganize("split", doc)}
             >
               <Scissors size={18} />
+            </button>
+          )}
+          {!signing && (
+            <button
+              className="icon-button"
+              aria-label="Convert PDF to images"
+              title="Convert PDF to images"
+              disabled={!!busy}
+              onClick={() => onConvert(doc, page)}
+            >
+              <FileImage size={18} />
             </button>
           )}
           <button

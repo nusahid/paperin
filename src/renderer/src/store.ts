@@ -46,7 +46,13 @@ export const useApp = create<State>((update) => ({
   error: null,
   saved: [],
   dirty: false,
-  dirtyWorkspaces: { home: false, reader: false, merge: false, split: false },
+  dirtyWorkspaces: {
+    home: false,
+    reader: false,
+    merge: false,
+    split: false,
+    convert: false,
+  },
   revision: 0,
   mergeName: "Documents_merged.pdf",
   splitConfig: {

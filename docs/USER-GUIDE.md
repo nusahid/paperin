@@ -62,6 +62,26 @@ Each image is limited to 15 MB, 16 million pixels, and 16,384 pixels per dimensi
 
 **A signature image does not verify the signer's identity and is not a certificate-based digital signature.** The editor rejects encrypted PDFs, PDFs with existing digital signatures, and PDFs with signature form fields. Use an appropriate signing application if you require certificates or identity verification.
 
+## Convert images to PDF
+
+1. Open **Convert**, choose **Image to PDF**, and select JPG/PNG files. Dropping images into the app opens this workspace too.
+2. Use **Add Images** to append more. Drag cards or use their arrow buttons to reorder; use rotate and remove controls as needed. Checkboxes support removing several images together.
+3. Review page size, orientation, fitting, and margins. Defaults are A4, Auto, Contain, 10 mm, and a white background. Stretch is under **Advanced settings** and can distort proportions.
+4. Click **Preview** to inspect pages, then **Create PDF** and choose a filename. Use **Open PDF** or **Show in Folder** after completion.
+
+Phone-image orientation is applied before user rotation. Source images are unchanged. Match Image Ratio bounds the longest page edge to about 210 mm; choose smaller margins for very narrow images.
+
+## Convert PDF pages to images
+
+1. Open **Convert → PDF to Image**, or use **Convert PDF to images** in Reader to reuse the open document and current page.
+2. Select **All Pages**, **Current Page**, **Selected Pages**, or **Custom Range**. Ranges accept `1-3, 5, 9-12`; duplicates are removed and pages export in source order. Click a thumbnail to change the current page; use its checkbox to change the selection.
+3. Choose JPG or PNG, then a resolution of 72, 150, 200, or 300 DPI. JPEG quality appears only for JPG. Reader zoom does not affect export resolution.
+4. Click **Preview** to inspect the encoded output, then **Convert**. One page uses Save As; multiple pages use a folder picker and names such as `Report_page_001.png`.
+
+At narrow window widths, open **Settings** at the top of the conversion workspace to access export controls. If a filename already exists, choose **Keep Both**, **Replace**, or **Cancel**. A second confirmation also covers filenames changed by adding an extension. Source files cannot be replaced.
+
+**Cancel conversion** stops rendering and further processing. Completed image files remain available and the result reports their count; an unfinished single PDF is discarded. Exported images have a white background and do not preserve selectable text, links, bookmarks, forms, or digital signatures.
+
 ## Keyboard shortcuts
 
 | Shortcut                             | Action                                                                                     |
@@ -81,7 +101,7 @@ Each image is limited to 15 MB, 16 million pixels, and 16,384 pixels per dimensi
 
 - Choose a new filename. Source files cannot be overwritten by an operation's output.
 - Check the preview before saving and reopen the exported PDF to inspect the result.
-- Wait for the export to finish. Cancellation after processing begins is not currently available.
+- Wait for the export to finish. Converter jobs support **Cancel conversion**; Merge, Split, and signature exports must finish once processing begins.
 - If a multi-file export fails partway through saving, check the app message and destination folder. Files already saved may remain there.
 - Page operations can affect bookmarks, forms, attachments, and digital signature validity. Review documents that use these features.
 - Save your work before closing the app. Recent-file history and editing sessions are not restored as a project after the app closes.

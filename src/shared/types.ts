@@ -1,5 +1,11 @@
 import type { SignatureExport, SignatureImage } from "./signature";
-export type Workspace = "home" | "reader" | "merge" | "split";
+import type {
+  ConversionImport,
+  ConversionPlan,
+  ConversionResult,
+  ConversionStart,
+} from "./conversion";
+export type Workspace = "home" | "reader" | "merge" | "split" | "convert";
 export type Source = { id: string; pages: number[] };
 export type Output = { name: string; sources: Source[] };
 export type ExportPlan = { outputs: Output[] };
@@ -12,6 +18,19 @@ export type LocalFile = {
 export type SavedFile = { id: string; name: string };
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 export interface PaperinAPI {
+  conversionPick(kind: "image" | "pdf"): Promise<Result<ConversionImport>>;
+  conversionImport(files: File[]): Promise<Result<ConversionImport>>;
+  conversionRead(id: string): Promise<Result<Uint8Array>>;
+  conversionRelease(ids: string[]): Promise<Result<void>>;
+  conversionBegin(
+    plan: ConversionPlan,
+  ): Promise<Result<ConversionStart | null>>;
+  conversionAppend(id: string, bytes: Uint8Array): Promise<Result<number>>;
+  conversionFinish(id: string): Promise<Result<ConversionResult>>;
+  conversionAbort(
+    id: string,
+    failed: boolean,
+  ): Promise<Result<ConversionResult>>;
   pickFiles(multiple: boolean): Promise<Result<LocalFile[]>>;
   importFiles(files: File[]): Promise<Result<LocalFile[]>>;
   sample(): Promise<Result<LocalFile[]>>;

@@ -31,6 +31,7 @@ import {
   type SignatureImage,
 } from "../shared/signature";
 import { signatureJob } from "./pdf-engine/signature/signature-service";
+import { setupConversionIPC } from "./conversion-ipc";
 
 app.commandLine.appendSwitch("disable-background-networking");
 app.commandLine.appendSwitch("disable-component-update");
@@ -133,6 +134,24 @@ function handle(channel: string, callback: (payload: any) => Promise<unknown>) {
   });
 }
 function setupIPC() {
+  setupConversionIPC({
+    handle,
+    window: () => mainWindow,
+    files,
+    saved,
+    journal,
+    registerPdf: register,
+    locked: () => exporting || signatureWorking,
+    lock: (value) => {
+      exporting = value;
+    },
+    validatePdf: (id, pages) =>
+      validatePlan(
+        qpdf(),
+        { outputs: [{ name: "converted.pdf", sources: [{ id, pages }] }] },
+        files,
+      ),
+  });
   handle("signature:begin", async (id) => {
     if (signatureWorking || exporting)
       throw new Error("Another operation is in progress. Please wait.");
@@ -462,7 +481,7 @@ async function createWindow() {
     width: 1280,
     height: 860,
     minWidth: 900,
-    minHeight: 650,
+    minHeight: 600,
     frame: false,
     backgroundColor: "#f8f9fc",
     title: "Paperin",
