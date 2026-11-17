@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import type { PaperinAPI } from "../shared/types";
 const api: PaperinAPI = {
+  inspectRearrange: (id) => ipcRenderer.invoke("rearrange:inspect", id),
+  exportRearrange: (plan) => ipcRenderer.invoke("rearrange:export", plan),
+  cancelRearrange: () => ipcRenderer.invoke("rearrange:cancel"),
   conversionPick: (kind) => ipcRenderer.invoke("conversion:pick", kind),
   conversionImport: (files) =>
     ipcRenderer.invoke(

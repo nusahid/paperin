@@ -132,7 +132,7 @@ Run `npm audit` to audit dependencies. Automated checks do not replace clean Win
 - PDF imports are limited to 512 MB per file. PDF objects remain in memory during the session.
 - Passwords are not persisted. When required for processing, they are passed to qpdf through process arguments.
 - Exports validate temporary files and page counts before replacing destination files. Destinations that refer to source files, including aliases and hard links, are rejected.
-- Exports cannot be canceled after processing starts. Each engine invocation has a two-minute timeout.
+- Rearrange exports support cancellation of native processing and validation. Merge, Split, and signature exports must finish once processing starts. Each engine invocation has a two-minute timeout.
 - If a multi-file export fails during final file commits, successfully saved files are reported and may remain in the destination.
 - The signature editor accepts static PNGs and rejects encrypted PDFs, existing digital signatures, and signature form fields.
 - Each PNG is limited to 15 MB, 16 million pixels, and 16,384 pixels per dimension. Each session accepts eight imports and 32 million image pixels in total. Undo/redo history is limited to 50 actions.

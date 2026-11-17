@@ -512,6 +512,7 @@ test("converts an unlocked encrypted PDF and preserves the Reader current page",
     .fill("test-password");
   await page.getByRole("button", { name: "Open PDF", exact: true }).click();
   await page.getByRole("button", { name: "Go to page 2", exact: true }).click();
+  await expect(page.getByText("Page 2 of 3", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Convert PDF to images" }).click();
   await expect(page.getByText("3 selected · Current page 2")).toBeVisible();
   await page.getByLabel("Pages", { exact: true }).selectOption("current");

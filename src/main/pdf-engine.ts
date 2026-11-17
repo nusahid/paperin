@@ -25,16 +25,22 @@ const output = z
 export const planSchema = z
   .object({ outputs: z.array(output).min(1).max(1000) })
   .strict();
-export async function runQpdf(binary: string, args: string[]) {
+export async function runQpdf(
+  binary: string,
+  args: string[],
+  signal?: AbortSignal,
+) {
   try {
     return (
       await exec(binary, args, {
         windowsHide: true,
         timeout: 120000,
         maxBuffer: 16 * 1024 * 1024,
+        signal,
       })
     ).stdout;
   } catch (error: any) {
+    if (signal?.aborted) throw new Error("Saving cancelled.");
     // qpdf exit 3 means the output is valid but warnings were generated.
     if (error.code === 3) return String(error.stdout ?? "");
     if (String(error.stderr).includes("invalid password"))

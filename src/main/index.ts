@@ -32,6 +32,7 @@ import {
 } from "../shared/signature";
 import { signatureJob } from "./pdf-engine/signature/signature-service";
 import { setupConversionIPC } from "./conversion-ipc";
+import { setupRearrangeIPC } from "./rearrange-ipc";
 
 app.commandLine.appendSwitch("disable-background-networking");
 app.commandLine.appendSwitch("disable-component-update");
@@ -134,6 +135,19 @@ function handle(channel: string, callback: (payload: any) => Promise<unknown>) {
   });
 }
 function setupIPC() {
+  setupRearrangeIPC({
+    handle,
+    window: () => mainWindow,
+    files,
+    saved,
+    binary: qpdf,
+    journal,
+    temp: () => app.getPath("temp"),
+    locked: () => exporting || signatureWorking,
+    lock: (value) => {
+      exporting = value;
+    },
+  });
   setupConversionIPC({
     handle,
     window: () => mainWindow,

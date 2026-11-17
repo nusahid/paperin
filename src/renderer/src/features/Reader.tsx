@@ -18,6 +18,7 @@ import {
   Redo2,
   Save,
   FileImage,
+  ArrowDownUp,
 } from "lucide-react";
 import { useApp, type Document } from "../store";
 import { PdfPage } from "../components/PdfPage";
@@ -32,7 +33,7 @@ export function Reader({
   onConvert,
 }: {
   onOpen: () => void;
-  onOrganize: (mode: "merge" | "split", doc: Document) => void;
+  onOrganize: (mode: "merge" | "split" | "rearrange", doc: Document) => void;
   onConvert: (doc: Document, page: number) => void;
 }) {
   const { documents, activeId } = useApp();
@@ -439,6 +440,17 @@ export function Reader({
           {!signing && (
             <button
               className="icon-button"
+              aria-label="Rearrange Pages"
+              title="Organize · Rearrange Pages"
+              disabled={!!busy}
+              onClick={() => onOrganize("rearrange", doc)}
+            >
+              <ArrowDownUp size={18} />
+            </button>
+          )}
+          {!signing && (
+            <button
+              className="icon-button"
               aria-label="Convert PDF to images"
               title="Convert PDF to images"
               disabled={!!busy}
@@ -523,6 +535,7 @@ export function Reader({
               {Array.from({ length: doc.pageCount }, (_, i) => (
                 <button
                   key={i}
+                  disabled={!!busy}
                   className={`reader-thumb ${page === i + 1 ? "current" : ""}`}
                   onClick={() => goTo(i + 1)}
                   aria-label={`Go to page ${i + 1}`}

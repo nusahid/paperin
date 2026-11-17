@@ -20,6 +20,7 @@ import {
   Upload,
   X,
   ArrowLeftRight,
+  ArrowDownUp,
 } from "lucide-react";
 import type {
   ExportPlan,
@@ -40,6 +41,8 @@ import { Convert } from "./features/converter/Convert";
 import { useConverter } from "./features/converter/store";
 import { importImage, unwrap } from "./features/converter/engine";
 import type { ConversionImport } from "../../shared/conversion";
+import { Rearrange } from "./features/rearrange/Rearrange";
+import { useRearrange } from "./features/rearrange/store";
 type PasswordRequest = {
   incorrect: boolean;
   resolve: (password: string) => void;
@@ -122,7 +125,10 @@ export function App() {
         mergeIds: [...current.mergeIds, ...added.map((d) => d.id)],
         dirty: true,
       });
-    else if (target === "split")
+    else if (target === "rearrange") {
+      useRearrange.getState().begin(added[0].id, added[0].pageCount);
+      set({ workspace: "rearrange", dirty: false });
+    } else if (target === "split")
       set({
         workspace: "split",
         splitId: added[0].id,
@@ -168,7 +174,10 @@ export function App() {
       await importConversion(() => window.paperin.conversionPick("image"));
       return;
     }
-    if (["split", "reader"].includes(target) && useApp.getState().dirty) {
+    if (
+      ["split", "reader", "rearrange"].includes(target) &&
+      useApp.getState().dirty
+    ) {
       setImportTarget(target);
       return;
     }
@@ -247,7 +256,13 @@ export function App() {
       set({ busy: null });
     }
   }
-  function organize(mode: "merge" | "split", doc: Document) {
+  function organize(mode: "merge" | "split" | "rearrange", doc: Document) {
+    if (mode === "rearrange") {
+      if (useRearrange.getState().documentId !== doc.id)
+        useRearrange.getState().begin(doc.id, doc.pageCount);
+      set({ workspace: "rearrange" });
+      return;
+    }
     if (mode === "merge")
       set({
         workspace: mode,
@@ -289,6 +304,7 @@ export function App() {
     { id: "reader" as const, label: "Reader", Icon: BookOpen },
     { id: "merge" as const, label: "Merge", Icon: Layers2 },
     { id: "split" as const, label: "Split", Icon: Scissors },
+    { id: "rearrange" as const, label: "Rearrange", Icon: ArrowDownUp },
     { id: "convert" as const, label: "Convert", Icon: ArrowLeftRight },
   ];
   return (
@@ -317,6 +333,13 @@ export function App() {
         setDragging(false);
         const files = Array.from(event.dataTransfer.files);
         if (
+          workspace === "rearrange" &&
+          (files.length !== 1 || !files[0].name.toLowerCase().endsWith(".pdf"))
+        ) {
+          set({ error: "Choose one PDF at a time to rearrange." });
+          return;
+        }
+        if (
           workspace === "convert" ||
           files.some((f) => /\.(jpe?g|png)$/i.test(f.name))
         ) {
@@ -327,7 +350,7 @@ export function App() {
           set({ error: "Please drop PDF files only." });
           return;
         }
-        if (["split", "reader"].includes(workspace) && dirty) {
+        if (["split", "reader", "rearrange"].includes(workspace) && dirty) {
           set({
             error:
               "Save your current changes or use Open PDF before dropping a new document.",
@@ -460,6 +483,12 @@ export function App() {
               onOpen={() => void open("split")}
               onPreview={setPreview}
               onExport={exportPdf}
+            />
+          )}
+          {workspace === "rearrange" && (
+            <Rearrange
+              onOpen={() => void open("rearrange")}
+              onBack={() => navigate("home")}
             />
           )}
           {workspace === "convert" && (
@@ -620,12 +649,17 @@ export function App() {
       )}
       {pendingNav && (
         <Modal
-          title="Leave without exporting?"
+          title={
+            workspace === "rearrange"
+              ? "Discard your changes?"
+              : "Leave without exporting?"
+          }
           onClose={() => setPendingNav(null)}
         >
           <p className="modal-description">
-            You have changes that haven't been saved as a PDF. Your setup will
-            stay available during this session.
+            {workspace === "rearrange"
+              ? "Your page order hasn't been saved. Discarding restores the last saved order."
+              : "You have changes that haven't been saved as a PDF. Your setup will stay available during this session."}
           </p>
           <div className="modal-actions">
             <button
@@ -633,16 +667,20 @@ export function App() {
               autoFocus
               onClick={() => setPendingNav(null)}
             >
-              Stay here
+              {workspace === "rearrange" ? "Keep editing" : "Stay here"}
             </button>
             <button
               className="button primary"
               onClick={() => {
+                if (workspace === "rearrange")
+                  useRearrange.getState().discard();
                 set({ workspace: pendingNav });
                 setPendingNav(null);
               }}
             >
-              Leave workspace
+              {workspace === "rearrange"
+                ? "Discard changes"
+                : "Leave workspace"}
             </button>
           </div>
         </Modal>

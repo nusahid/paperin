@@ -1,11 +1,13 @@
 import type { SignatureExport, SignatureImage } from "./signature";
+import type { RearrangeInspection, RearrangePlan } from "./rearrange";
 import type {
   ConversionImport,
   ConversionPlan,
   ConversionResult,
   ConversionStart,
 } from "./conversion";
-export type Workspace = "home" | "reader" | "merge" | "split" | "convert";
+export type Workspace =
+  "home" | "reader" | "merge" | "split" | "rearrange" | "convert";
 export type Source = { id: string; pages: number[] };
 export type Output = { name: string; sources: Source[] };
 export type ExportPlan = { outputs: Output[] };
@@ -18,6 +20,9 @@ export type LocalFile = {
 export type SavedFile = { id: string; name: string };
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 export interface PaperinAPI {
+  inspectRearrange(id: string): Promise<Result<RearrangeInspection>>;
+  exportRearrange(plan: RearrangePlan): Promise<Result<SavedFile | null>>;
+  cancelRearrange(): Promise<Result<void>>;
   conversionPick(kind: "image" | "pdf"): Promise<Result<ConversionImport>>;
   conversionImport(files: File[]): Promise<Result<ConversionImport>>;
   conversionRead(id: string): Promise<Result<Uint8Array>>;

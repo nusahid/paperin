@@ -52,6 +52,7 @@ export const useApp = create<State>((update) => ({
     merge: false,
     split: false,
     convert: false,
+    rearrange: false,
   },
   revision: 0,
   mergeName: "Documents_merged.pdf",

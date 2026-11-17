@@ -2,7 +2,7 @@
 
 [Download and installation](INSTALLATION.md) · [Back to README](../README.md)
 
-The main workspaces are **Home**, **Reader**, **Merge**, and **Split**. Button names below match the English app interface.
+The main workspaces are **Home**, **Reader**, **Merge**, **Split**, **Rearrange**, and **Convert**. Button names below match the English app interface.
 
 ## Open a document
 
@@ -47,6 +47,18 @@ Open **Split** and select the PDF you want to process. Choose a mode:
 For page selection modes, click thumbnails or use the all, none, odd, and even selection controls. The selection range field accepts input such as `1-3, 5, 7`; click **Apply range** to apply it.
 
 Enter a filename or output name prefix, click **Preview output**, then use the save button for your mode: **Extract & save**, **Remove & save**, or **Split & save**. For multiple output files, the app asks you to choose a destination folder.
+
+## Rearrange PDF pages
+
+1. Open **Rearrange** from the sidebar or the **Rearrange Pages** card on Home, then choose one PDF or drop it into the workspace. In Reader, **Rearrange Pages** reuses the active document.
+2. Drag a thumbnail before or after another page. The blue insertion line marks the destination. Ctrl+click toggles individual selections; Shift+click selects a range in the displayed order. Dragging a selected thumbnail moves the entire selection in its displayed order. The grid scrolls automatically near its top and bottom edges.
+3. Use **Reverse Pages** to reverse the current order. **Undo**, **Redo**, and **Reset Order** also work in memory. History holds up to 50 changes.
+4. Each card shows its new position and its original page number. Double-click a card, or use **Preview**, to read pages in the new order.
+5. Click **Save As**. The suggested name is `[original_name]_reordered.pdf`. Wait for the success message; use **Open file** to inspect the result. **Cancel saving** discards unfinished output. Your source stays unchanged.
+
+When the grid has focus, arrows navigate thumbnails, Space toggles selection, Ctrl+A selects all, Escape clears selection or cancels a drag, and Enter previews the focused page. Alt+Left/Up moves the selection one position earlier; Alt+Right/Down moves it later. Ctrl+Z undoes; Ctrl+Shift+Z or Ctrl+Y redoes. Input fields and other workspaces keep their own shortcuts.
+
+Rearrange preserves page content without converting it to images. It blocks digital signatures and signature fields. Password-protected documents require a valid password and permission to assemble pages; their output remains encrypted. Warnings identify bookmarks, custom page labels, and interactive forms that need review. Leaving with unsaved changes asks whether to keep editing or discard changes back to the last saved order. Sessions are kept only in memory.
 
 ## Add a signature image
 
@@ -101,7 +113,7 @@ At narrow window widths, open **Settings** at the top of the conversion workspac
 
 - Choose a new filename. Source files cannot be overwritten by an operation's output.
 - Check the preview before saving and reopen the exported PDF to inspect the result.
-- Wait for the export to finish. Converter jobs support **Cancel conversion**; Merge, Split, and signature exports must finish once processing begins.
+- Wait for the export to finish. Converter jobs support **Cancel conversion**, and Rearrange supports **Cancel saving**; Merge, Split, and signature exports must finish once processing begins.
 - If a multi-file export fails partway through saving, check the app message and destination folder. Files already saved may remain there.
 - Page operations can affect bookmarks, forms, attachments, and digital signature validity. Review documents that use these features.
 - Save your work before closing the app. Recent-file history and editing sessions are not restored as a project after the app closes.

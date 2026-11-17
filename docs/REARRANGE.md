@@ -1,0 +1,17 @@
+# Rearrange implementation
+
+Paperin implements the supplied Folio Rearrange PRD using the existing React, Zustand, PDF.js, and bundled qpdf stack. No runtime network dependency is added.
+
+`src/shared/rearrange.ts` owns permutation validation, selection moves, and bounded snapshot history. Original page numbers serve as stable IDs within a registered document. The renderer store holds the original identity, displayed order, selection anchor, last saved order, and 50 undo actions. No-op moves do not create history. Dirty state compares the displayed order with the last successful export (initially the source order).
+
+The grid virtualizes rows and overscans two rows on either side. Only mounted pages use PDF.js rendering. A per-document cache holds at most 96 thumbnail canvases and is cleared when the workspace unmounts. The full-page preview renders one page at a time in current order. Native HTML drag-and-drop supports groups, insertion boundaries, Escape cancellation, and frame-based edge scrolling. Keyboard shortcuts are scoped to the grid.
+
+The main process validates IPC schemas, snapshots the source, verifies its import hash, checks encryption assembly permission, and uses qpdf to produce a decrypted inspection copy. Parsing and page fingerprinting run in a dedicated worker. Digital signature dictionaries and signature fields, including nested direct dictionaries, block export. Forms, bookmarks, and page labels trigger warnings.
+
+Export uses the source as qpdf's primary document with `--stream-data=preserve` and `--remove-unreferenced-resources=no`, preserving document-level structures where supported. Source encryption is retained. Output is staged beside the destination, checked by qpdf, and compared with the source using ordered page fingerprints before an atomic rename. Fingerprints cover raw content and resource streams, page boxes, rotation, and annotation appearances; navigation destinations are excluded because references change during rewriting. This comparison validates page identity and content, not every possible PDF feature or navigation behavior.
+
+The same recovery journal used by existing exports tracks owned staging folders. Successful, failed, and canceled jobs clean their snapshots and output; startup retries cleanup after crashes. The original and all registered source aliases/hard links are protected by the existing output guard. Existing destinations offer Keep Both, Replace, or Cancel, and a final identity check rejects a destination changed during processing. Cancellation aborts qpdf or terminates the inspection worker before publishing output.
+
+Validation includes all insertion boundaries for every selection of eight pages, history branching, selection anchors after reversing, current/saved dirty state, mixed page sizes and rotation, fonts/vector/image content, form values, bookmark presence, labels, Unicode paths, wrong-order detection, source hashes, encryption preservation and permission restrictions, nested signatures, native cancellation, and offline Electron flows. E2E tests render the first/last saved pages and check a 1,000-page virtualized workspace. Reference-device timing targets, exhaustive PDF compatibility, OS packet capture, and clean Windows installation remain separate release checks.
+
+qpdf behavior is based on its bundled 12.4.2 help and [official page-selection documentation](https://qpdf.readthedocs.io/en/stable/cli.html#page-selection). Reordering can change advanced navigation and form behavior; warnings remain necessary.

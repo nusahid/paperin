@@ -34,6 +34,42 @@ try {
   await expect(
     page.locator(".reading-page").first().locator(".textLayer"),
   ).toContainText("A little room");
+  await page
+    .getByRole("button", { name: "Rearrange Pages", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Reverse Pages", exact: true }),
+  ).toBeEnabled();
+  await page
+    .getByRole("button", { name: "Reverse Pages", exact: true })
+    .click();
+  await expect(page.locator(".rearrange-page").first()).toHaveAttribute(
+    "data-original",
+    "8",
+  );
+  const rearrangedOutput = path.join(temp, "packaged-reordered.pdf");
+  await app.evaluate(({ dialog }, filePath) => {
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath });
+  }, rearrangedOutput);
+  await page.getByRole("button", { name: "Save As", exact: true }).click();
+  await expect(
+    page.getByText("PDF saved successfully.", { exact: true }),
+  ).toBeVisible();
+  expect(
+    (
+      await PDFDocument.load(await fs.readFile(rearrangedOutput))
+    ).getPageCount(),
+  ).toBe(8);
+  await page.screenshot({
+    path: "test-results/screenshots/packaged-rearrange.png",
+  });
+  await page
+    .getByRole("button", { name: "Dismiss success", exact: true })
+    .click();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Reader", exact: true })
+    .click();
   const signature = new PNG({ width: 120, height: 40 });
   for (let y = 12; y < 28; y++)
     for (let x = 10; x < 110; x++) {
@@ -149,7 +185,7 @@ try {
     path: "test-results/screenshots/packaged-reader.png",
   });
   console.log(
-    "Packaged Windows app: offline reader, signatures, qpdf, Image to PDF worker and PDF to PNG export all passed.",
+    "Packaged Windows app: offline reader, rearrange worker and qpdf validation, signatures, Image to PDF worker and PDF to PNG export all passed.",
   );
 } finally {
   if (app) await app.evaluate(({ app }) => app.exit());

@@ -12,6 +12,7 @@ export function PdfPage({
   maxHeight,
   scale,
   overlay,
+  cache,
 }: {
   pdf: PDFDocumentProxy;
   page: number;
@@ -21,6 +22,7 @@ export function PdfPage({
   maxHeight?: number;
   scale?: number;
   overlay?: (viewport: PageViewport) => React.ReactNode;
+  cache?: Map<number, HTMLCanvasElement>;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -86,12 +88,29 @@ export function PdfPage({
         const dpr = Math.min(window.devicePixelRatio || 1, text ? 2 : 1.5);
         target.width = Math.ceil(viewport.width * dpr);
         target.height = Math.ceil(viewport.height * dpr);
-        renderTask = source.render({
-          canvas: target,
-          viewport,
-          transform: [dpr, 0, 0, dpr, 0, 0],
-        });
-        await renderTask.promise;
+        const cached = cache?.get(page);
+        if (
+          cached &&
+          cached.width === target.width &&
+          cached.height === target.height
+        ) {
+          target.getContext("2d")!.drawImage(cached, 0, 0);
+        } else {
+          renderTask = source.render({
+            canvas: target,
+            viewport,
+            transform: [dpr, 0, 0, dpr, 0, 0],
+          });
+          await renderTask.promise;
+          if (cache && !disposed) {
+            const bitmap = document.createElement("canvas");
+            bitmap.width = target.width;
+            bitmap.height = target.height;
+            bitmap.getContext("2d")!.drawImage(target, 0, 0);
+            cache.set(page, bitmap);
+            if (cache.size > 96) cache.delete(cache.keys().next().value!);
+          }
+        }
         if (text && layer.current && !disposed) {
           layer.current.replaceChildren();
           layer.current.style.setProperty(
@@ -119,7 +138,7 @@ export function PdfPage({
       renderTask?.cancel();
       textLayer?.cancel();
     };
-  }, [pdf, page, width, visible, text, maxHeight, scale]);
+  }, [pdf, page, width, visible, text, maxHeight, scale, cache]);
   useEffect(() => {
     if (!layer.current) return;
     // Highlight text spans without replacing PDF.js' selectable text content.

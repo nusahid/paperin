@@ -10,6 +10,7 @@ import {
   Scissors,
   ShieldCheck,
   Sparkles,
+  ArrowDownUp,
 } from "lucide-react";
 import type { Workspace } from "../../../shared/types";
 export function Home({
@@ -80,6 +81,13 @@ export function Home({
             title: "Merge PDFs",
             description: "Bring it all together.",
             detail: "Combine & arrange files",
+          },
+          {
+            id: "rearrange" as const,
+            Icon: ArrowDownUp,
+            title: "Rearrange Pages",
+            description: "Change the order of pages in your PDF.",
+            detail: "Move, reverse & save pages",
           },
           {
             id: "split" as const,

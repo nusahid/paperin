@@ -4,7 +4,7 @@
 
 # Paperin
 
-**Read, merge, split, convert, and add signature images to PDFs right on your computer.**
+**Read, merge, split, rearrange, convert, and add signature images to PDFs right on your computer.**
 
 Paperin is an offline PDF workspace for Windows. No account or document uploads required. Free and open source under the MIT license.
 
@@ -36,6 +36,7 @@ The installer is currently unsigned. If Windows displays an unknown publisher wa
 | **Reader**                   | Read PDFs, browse thumbnails, navigate pages, zoom from 25–300%, copy text, and search for text.                                 |
 | **Merge**                    | Combine multiple PDFs, arrange their order, and preview the result before saving.                                                |
 | **Split**                    | Extract pages, remove pages from a copy, split by ranges, or create a PDF every N pages.                                         |
+| **Rearrange**                | Drag one or several pages, reverse the current order, undo/redo, preview, and save a new PDF without rasterizing pages.          |
 | **Convert**                  | Combine JPG/PNG images into a PDF, or export PDF pages as JPG/PNG with page selection, DPI, preview, progress, and cancellation. |
 | **Add Signature**            | Import a PNG signature image, adjust its position and size, and save a new PDF.                                                  |
 | **Local processing**         | Open and process documents without accounts, uploads, or cloud services.                                                         |
@@ -52,6 +53,7 @@ The app and documentation are in English. The guides use the button labels shown
 - Search works on PDFs with a text layer. OCR for scanned documents is not available.
 - Added signatures are **visual images**. They do not provide identity verification or certificate-based digital signing.
 - The signature editor does not support encrypted PDFs, documents with existing digital signatures, or signature form fields.
+- Rearrange blocks digital signatures and signature fields. Protected PDFs require a valid password and page assembly permission; output encryption is retained. Review bookmarks, custom page labels, links, and forms after saving.
 - Merging or splitting pages can affect bookmarks, forms, attachments, and existing digital signature validity.
 - OCR, annotations, printing, recent-file history, and automatic updates are not available. Check the [latest releases][releases] to update manually.
 

@@ -9,6 +9,7 @@ export default defineConfig({
           index: "src/main/index.ts",
           "signature-worker": "src/main/signature-worker.ts",
           "conversion-worker": "src/main/conversion-worker.ts",
+          "rearrange-worker": "src/main/rearrange-worker.ts",
         },
       },
     },
