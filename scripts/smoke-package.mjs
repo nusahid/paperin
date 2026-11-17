@@ -4,6 +4,9 @@ import path from "node:path";
 import os from "node:os";
 import { PDFDocument } from "pdf-lib";
 import { PNG } from "pngjs";
+const { version } = JSON.parse(
+  await fs.readFile(new URL("../package.json", import.meta.url), "utf8"),
+);
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), "paperin-package-smoke-"));
 let app;
 try {
@@ -15,6 +18,10 @@ try {
   });
   const page = await app.firstWindow();
   expect(await app.evaluate(({ app }) => app.getName())).toBe("Paperin");
+  expect(await app.evaluate(({ app }) => app.getVersion())).toBe(version);
+  await expect(page.locator(".sidebar-version")).toHaveText(
+    `PAPERIN / v${version}`,
+  );
   await expect(page).toHaveTitle("Paperin — Your PDF workspace");
   await expect(page.locator(".brand strong")).toHaveText("Paperin");
   const errors = [],

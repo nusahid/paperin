@@ -89,6 +89,10 @@ jobs:
           SHA256SUMS.txt contains the installer checksum for this release.
           "@
           $notesPath = Join-Path $env:RUNNER_TEMP 'paperin-release-notes.md'
+          $versionNotesPath = Join-Path $env:GITHUB_WORKSPACE "docs/releases/$env:RELEASE_TAG.md"
+          if (Test-Path -LiteralPath $versionNotesPath) {
+            $releaseNotes = Get-Content -LiteralPath $versionNotesPath -Raw
+          }
           Set-Content -LiteralPath $notesPath -Value $releaseNotes -Encoding utf8
           gh release create "$env:RELEASE_TAG" '.\dist\make\squirrel.windows\x64\Paperin-Setup.exe' '.\dist\make\squirrel.windows\x64\SHA256SUMS.txt' --verify-tag --latest --title "Paperin $env:RELEASE_TAG" --notes-file "$notesPath"
           if ($LASTEXITCODE -ne 0) { throw 'Publishing the release failed. Check whether the tag already has a release.' }
